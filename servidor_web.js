@@ -1,0 +1,177 @@
+'use strict';
+require('dotenv').config();
+const express=require('express');
+const session=require('express-session');
+const http=require('http');
+const path=require('path');
+const crypto=require('crypto');
+const {Server}=require('socket.io');
+const db=require('./db');
+const {createBot}=require('./bot');
+
+for (const name of ['DATABASE_URL','SESSION_SECRET','ADMIN_USER','ADMIN_PASS']) {
+  if (!process.env[name]) throw new Error(`Falta ${name} en las variables de entorno.`);
+}
+if (process.env.SESSION_SECRET.length<24) throw new Error('SESSION_SECRET debe tener mínimo 24 caracteres.');
+const PORT=Number(process.env.PORT||3000);
+const app=express();
+app.disable('x-powered-by');
+app.set('trust proxy',1);
+app.set('view engine','ejs');
+app.set('views',path.join(__dirname,'views'));
+app.use(express.urlencoded({extended:false,limit:'40kb'}));
+app.use(express.json({limit:'100kb'}));
+app.use('/public',express.static(path.join(__dirname,'public'),{maxAge:'1h'}));
+const sessionMiddleware=session({secret:process.env.SESSION_SECRET,
+  store:new db.PgSessionStore(),resave:false,saveUninitialized:false,name:'webalma.sid',
+  cookie:{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:8*3600000}});
+app.use(sessionMiddleware);
+app.use((req,res,next)=>{req.session.csrf??=crypto.randomBytes(24).toString('hex');next();});
+const server=http.createServer(app);
+const io=new Server(server);
+io.engine.use(sessionMiddleware);
+io.use((socket,next)=>socket.request.session?.usuario?next():next(new Error('No autorizado')));
+const clean=(v,max=200)=>String(v??'').trim().slice(0,max);
+const money=v=>{const n=Number(v);return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null;};
+const nonnegInt=v=>{const n=Number(v);return Number.isSafeInteger(n)&&n>=0?n:null;};
+function same(a,b){const x=crypto.createHash('sha256').update(String(a)).digest();const y=crypto.createHash('sha256').update(String(b)).digest();return crypto.timingSafeEqual(x,y);}
+function auth(req,res,next){if(req.session.usuario)return next();res.redirect('/');}
+function admin(req,res,next){if(req.session.usuario?.rol==='administradora')return next();res.status(403).send('Acceso reservado a la propietaria.');}
+function csrf(req,res,next){const a=String(req.body._csrf||''),b=String(req.session.csrf||'');
+  if(!a||a.length!==b.length||!same(a,b))return res.status(403).send('Formulario vencido o inválido.');next();}
+function go(res,code,section='inventario'){res.redirect(`/gestor?seccion=${encodeURIComponent(section)}&resultado=${encodeURIComponent(code)}`);}
+function todayMX(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const p=k=>parts.find(x=>x.type===k).value;return `${p('year')}-${p('month')}-${p('day')}`;}
+function weekBounds(date=todayMX()){const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);const start=d.toISOString().slice(0,10);d.setUTCDate(d.getUTCDate()+6);return {start,end:d.toISOString().slice(0,10)};}
+function report(logs,{start,end}){const data={bn:{trabajos:0,hojas:0,ingresos:0},color:{trabajos:0,hojas:0,ingresos:0},total:0};
+  for(const r of logs.filter(x=>x.fecha>=start&&x.fecha<=end)){
+    const k=r.tipo==='color'?'color':'bn';data[k].trabajos++;data[k].hojas+=Number(r.cantidad||0);data[k].ingresos+=Number(r.total||0);data.total+=Number(r.total||0);
+  }return data;}
+function csvReport(data){return '\ufeffConcepto,Trabajos,Hojas,Ingresos MXN\r\n'+
+  `Blanco y negro,${data.bn.trabajos},${data.bn.hojas},${data.bn.ingresos.toFixed(2)}\r\n`+
+  `Color,${data.color.trabajos},${data.color.hojas},${data.color.ingresos.toFixed(2)}\r\n`+
+  `Total,,${data.bn.hojas+data.color.hojas},${data.total.toFixed(2)}\r\n`;}
+const attempts=new Map();
+app.get('/health',async (_req,res)=>{try{await db.query('SELECT 1');res.json({status:'ok'});}catch(e){res.status(503).json({status:'db_unavailable'});}});
+app.get('/',(req,res)=>req.session.usuario?res.redirect('/gestor'):res.render('login',{error:req.query.error==='1',csrf:req.session.csrf}));
+app.post('/login',csrf,async(req,res)=>{
+  const ip=req.ip||'unknown',now=Date.now();const a=attempts.get(ip)||{n:0,until:0};
+  if(a.until>now)return res.status(429).send('Demasiados intentos. Vuelve a intentarlo en 15 minutos.');
+  const user=clean(req.body.username,80),pass=String(req.body.password||'');
+  const account=await db.verifyLogin(user,pass);
+  if(!account){a.n++;if(a.n>=6){a.until=now+15*60*1000;a.n=0;} attempts.set(ip,a);return res.redirect('/?error=1');}
+  attempts.delete(ip);
+  req.session.regenerate(e=>{if(e)return res.status(500).send('Error de sesión');
+    req.session.usuario=account;
+    req.session.csrf=crypto.randomBytes(24).toString('hex');res.redirect('/gestor');});
+});
+app.post('/logout',auth,csrf,(req,res)=>req.session.destroy(()=>res.redirect('/')));
+app.get('/gestor',auth,async(req,res)=>{
+  const [inventario,pedidosActivos,impresiones,config]=await Promise.all([db.getInventory(),db.getOrders(),db.getImpressions(),db.getConfig()]);
+  const bounds=weekBounds();const lowStock=inventario.filter(x=>x.stock<=(x.stock_minimo_sugerido??config.stockMinimo));
+  res.render('gestor',{inventario,pedidosActivos,lowStock,config,usuario:req.session.usuario,
+    csrf:req.session.csrf,bounds,report:report(impresiones,bounds),recientes:impresiones.slice(-8).reverse(),
+    totalUnidades:inventario.reduce((s,p)=>s+p.stock,0),
+    valorEstimado:inventario.reduce((s,p)=>s+p.precio*p.stock,0),
+    seccion:clean(req.query.seccion,24),resultado:clean(req.query.resultado,80)});
+});
+app.post('/inventario/nuevo',auth,admin,csrf,async(req,res)=>{
+  const data={producto:clean(req.body.producto,150),categoria:clean(req.body.categoria,80)||'Otros',
+    precio:money(req.body.precio),stock:nonnegInt(req.body.stock),minimo:nonnegInt(req.body.minimo),
+    existencia_confirmada:req.body.existencia_confirmada==='si',precio_confirmado:req.body.precio_confirmado==='si'};
+  if(!data.producto||data.precio===null||data.stock===null||data.minimo===null)return go(res,'datos_invalidos');
+  await db.createProduct(data);io.emit('inventario_actualizado');go(res,'producto_agregado');
+});
+app.post('/inventario/:id/editar',auth,admin,csrf,async(req,res)=>{
+  const data={producto:clean(req.body.producto,150),categoria:clean(req.body.categoria,80)||'Otros',
+    precio:money(req.body.precio),minimo:nonnegInt(req.body.minimo),
+    existencia_confirmada:req.body.existencia_confirmada==='si',precio_confirmado:req.body.precio_confirmado==='si'};
+  if(!/^\d+$/.test(req.params.id)||!data.producto||data.precio===null||data.minimo===null)return go(res,'datos_invalidos');
+  const ok=await db.editProduct(Number(req.params.id),data);
+  if(!ok)return go(res,'datos_invalidos');io.emit('inventario_actualizado');go(res,'producto_actualizado');
+});
+app.post('/inventario/:id/movimiento',auth,admin,csrf,async(req,res)=>{
+  const cantidad=nonnegInt(req.body.cantidad),tipo=req.body.tipo;
+  if(!/^\d+$/.test(req.params.id)||!cantidad||!['entrada','salida'].includes(tipo))return go(res,'movimiento_invalido');
+  try{
+    const out=await db.moveProduct(Number(req.params.id),tipo,cantidad,clean(req.body.nota,180),req.session.usuario.id,req.session.usuario.rol);
+    if(out.error)return go(res,out.error);
+  }catch(e){if(e.code==='LOTES_INCONSISTENTES')return go(res,'lotes_inconsistentes');throw e;}
+  io.emit('inventario_actualizado');go(res,'movimiento_registrado');
+});
+
+// API opcional de compatibilidad; el bot integrado llama directamente a createOrder().
+app.post('/api/nuevo_pedido',async(req,res)=>{
+  const secret=process.env.BOT_API_KEY;
+  if(!secret||!same(req.get('authorization')||'',`Bearer ${secret}`))return res.status(401).json({error:'No autorizado'});
+  const cliente=clean(req.body.cliente,100)||'Estudiante',total=money(req.body.total);
+  const articulos=Array.isArray(req.body.articulos)?req.body.articulos.slice(0,40):[];
+  const parsed=articulos.map(a=>typeof a==='string'?{descripcion:clean(a,200),productoId:null,cantidad:1,precioUnitario:0,subtotal:0}:{
+    descripcion:clean(a.descripcion,200),productoId:Number.isSafeInteger(a.productoId)?a.productoId:null,
+    cantidad:nonnegInt(a.cantidad),precioUnitario:money(a.precioUnitario),subtotal:money(a.subtotal)});
+  if(total===null||!parsed.length||parsed.some(a=>!a.descripcion||!a.cantidad||a.precioUnitario===null||a.subtotal===null))return res.status(400).json({error:'Datos inválidos'});
+  const order=await db.createOrder({cliente,total,articulos:parsed});io.emit('alerta_nuevo_pedido',order);
+  return res.status(201).json({success:true,pedidoId:order.id});
+});
+app.post('/completar_pedido/:id',auth,csrf,async(req,res)=>{
+  if(!/^\d+$/.test(req.params.id))return go(res,'pedido_no_encontrado','pedidos');
+  const ok=await db.completeOrder(Number(req.params.id));if(!ok)return go(res,'pedido_no_encontrado','pedidos');
+  io.emit('pedido_completado',{id:req.params.id});go(res,'pedido_entregado','pedidos');
+});
+app.post('/impresiones/registrar',auth,csrf,async(req,res)=>{
+  const tipo=req.body.tipo,cantidad=nonnegInt(req.body.cantidad),cfg=await db.getConfig();
+  if(!['bn','color'].includes(tipo)||!cantidad||cantidad>50000)return go(res,'datos_invalidos','impresiones');
+  await db.registerPrint(tipo,cantidad,tipo==='bn'?cfg.precioBN:cfg.precioColor,clean(req.body.observacion,150),req.session.usuario.id);
+  io.emit('impresion_actualizada');go(res,'impresion_registrada','impresiones');
+});
+app.get('/reportes/semanal.csv',auth,async(req,res)=>{
+  const bounds=weekBounds();const data=report(await db.getImpressions(),bounds);
+  res.type('text/csv; charset=utf-8').set('Content-Disposition',`attachment; filename="reporte_impresiones_${bounds.start}.csv"`).send(csvReport(data));
+});
+app.get('/reportes/mensual.csv',auth,async(req,res)=>{
+  const mes=String(req.query.mes||todayMX().slice(0,7));
+  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes))return res.status(400).send('Mes inválido');
+  const end=new Date(Date.UTC(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0)).toISOString().slice(0,10);
+  const data=report(await db.getImpressions(),{start:mes+'-01',end});
+  res.type('text/csv; charset=utf-8').set('Content-Disposition',`attachment; filename="reporte_mensual_${mes}.csv"`).send(csvReport(data));
+});
+app.post('/configuracion/guardar',auth,admin,csrf,async(req,res)=>{
+  const values={stockMinimo:nonnegInt(req.body.stockMinimo),precioBN:money(req.body.precioBN),precioColor:money(req.body.precioColor),
+    horario:clean(req.body.horario,100),aviso:clean(req.body.aviso,350),preciosValidados:req.body.preciosValidados==='si'};
+  if(values.stockMinimo===null||values.precioBN===null||values.precioColor===null)return go(res,'datos_invalidos','configuracion');
+  await db.saveConfig(values);io.emit('configuracion_actualizada');go(res,'configuracion_guardada','configuracion');
+});
+
+let bot;
+async function initializeBot(){
+  const mode=process.env.BOT_MODE||'off';
+  if(mode==='off')return console.log('Telegram desactivado (BOT_MODE=off).');
+  bot=createBot(async pedido=>{const order=await db.createOrder(pedido);io.emit('alerta_nuevo_pedido',order);return order;});
+  if(mode==='webhook') {
+    const url=String(process.env.PUBLIC_URL||'').replace(/\/$/,'');
+    const secret=process.env.TELEGRAM_WEBHOOK_SECRET;
+    if(!url.startsWith('https://')||!secret||!/^[A-Za-z0-9_-]{12,256}$/.test(secret))throw new Error('Webhook requiere PUBLIC_URL HTTPS y TELEGRAM_WEBHOOK_SECRET (12-256 caracteres).');
+    app.post('/telegram/webhook',(req,res,next)=>{
+      if(!same(req.get('x-telegram-bot-api-secret-token')||'',secret))return res.sendStatus(403);
+      bot.webhookCallback('/telegram/webhook')(req,res,next);
+    });
+    await bot.telegram.setWebhook(url+'/telegram/webhook',{secret_token:secret,allowed_updates:['message','callback_query']});
+    console.log('Webhook de Telegram configurado.');
+  }else if(mode==='polling'){
+    if(process.env.NODE_ENV==='production')throw new Error('Para Render usa BOT_MODE=webhook.');
+    await bot.telegram.deleteWebhook();
+    await bot.launch();console.log('Telegram iniciado en modo pruebas (polling).');
+  }else throw new Error('BOT_MODE debe ser off, webhook o polling.');
+}
+app.use((err,req,res,_next)=>{console.error('Error WebAlma:',err.message);if(!res.headersSent)res.status(500).send('Ocurrió un error en el servidor.');});
+
+async function start(){
+  const configCheck=await db.query('SELECT 1 FROM public.configuracion WHERE id=1');
+  if(!configCheck.rows.length)throw new Error('Falta ejecutar 01_actualizacion_segura.sql');
+  await db.ensureInitialUsers();
+  await new Promise(resolve=>server.listen(PORT,'0.0.0.0',resolve));
+  console.log(`WebAlma web escuchando en puerto ${PORT}`);
+  try{await initializeBot();}catch(e){console.error('No se pudo iniciar Telegram:',e.message);server.close();process.exitCode=1;}
+}
+if(require.main===module){start().catch(e=>{console.error('Arranque fallido:',e.message);process.exitCode=1;});}
+module.exports={app,server,start,report,weekBounds};

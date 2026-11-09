@@ -1,0 +1,24 @@
+{
+  "name": "webalma",
+  "version": "3.0.0",
+  "private": true,
+  "description": "WebAlma: Telegram y gestor administrativo en un servicio Node.js con PostgreSQL",
+  "type": "commonjs",
+  "main": "servidor_web.js",
+  "scripts": {
+    "start": "node servidor_web.js",
+    "check": "node --check servidor_web.js && node --check bot.js && node --check db.js && node --check public/panel.js && node tests/plantillas.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "pg": "^8.13.1",
+    "socket.io": "^4.8.1",
+    "telegraf": "^4.16.3"
+  }
+}
