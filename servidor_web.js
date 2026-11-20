@@ -5,6 +5,7 @@ const session=require('express-session');
 const http=require('http');
 const path=require('path');
 const crypto=require('crypto');
+const {Readable}=require('node:stream');
 const {Server}=require('socket.io');
 const db=require('./db');
 const {createBot}=require('./bot');
@@ -112,6 +113,32 @@ app.post('/api/nuevo_pedido',async(req,res)=>{
   if(total===null||!parsed.length||parsed.some(a=>!a.descripcion||!a.cantidad||a.precioUnitario===null||a.subtotal===null))return res.status(400).json({error:'Datos inválidos'});
   const order=await db.createOrder({cliente,total,articulos:parsed});io.emit('alerta_nuevo_pedido',order);
   return res.status(201).json({success:true,pedidoId:order.id});
+});
+// El documento se obtiene desde Telegram al solicitarlo, sin exponer BOT_TOKEN al navegador.
+// Solo el personal autenticado puede descargar un archivo asociado a un pedido.
+app.get('/pedidos/:id/archivos/:doc/descargar',auth,async(req,res)=>{
+  if(!/^\d+$/.test(req.params.id)||!/^\d+$/.test(req.params.doc))return res.sendStatus(400);
+  const archivo=await db.getOrderDocument(Number(req.params.id),Number(req.params.doc));
+  if(!archivo)return res.sendStatus(404);
+  if(!bot)return res.status(503).send('Servicio de documentos temporalmente no disponible.');
+  try{
+    const enlace=await bot.telegram.getFileLink(archivo.telegram_file_id);
+    const u=new URL(String(enlace));
+    if(u.protocol!=='https:'||u.hostname!=='api.telegram.org')return res.sendStatus(502);
+    const respuesta=await fetch(u,{signal:AbortSignal.timeout(30000),redirect:'error'});
+    if(!respuesta.ok||!respuesta.body)return res.sendStatus(502);
+    const limite=8*1024*1024;
+    if(Number(respuesta.headers.get('content-length')||0)>limite)return res.status(413).send('Archivo demasiado grande.');
+    let enviados=0;
+    const stream=Readable.fromWeb(respuesta.body);
+    stream.on('data',chunk=>{enviados+=chunk.length;if(enviados>limite)stream.destroy(new Error('Limite de archivo'));});
+    stream.on('error',()=>{if(!res.headersSent)res.status(502).end();else res.destroy();});
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Cache-Control','private, no-store');
+    res.setHeader('X-Content-Type-Options','nosniff');
+    res.setHeader('Content-Disposition',`attachment; filename="documento_webalma.pdf"; filename*=UTF-8''${encodeURIComponent(String(archivo.nombre_archivo).replace(/[\r\n]/g,' ').slice(0,120))}`);
+    stream.pipe(res);
+  }catch(_e){console.warn('No se pudo descargar PDF desde Telegram.');if(!res.headersSent)res.status(502).send('PDF no disponible; solicita el documento al estudiante.');}
 });
 app.post('/completar_pedido/:id',auth,csrf,async(req,res)=>{
   if(!/^\d+$/.test(req.params.id))return go(res,'pedido_no_encontrado','pedidos');
