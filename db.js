@@ -50,12 +50,14 @@ async function getConfig() {
 }
 async function getOrders() {
   const { rows } = await query(`SELECT p.id, p.nombre_cliente, p.total, p.fecha,
-   COALESCE(array_agg(d.descripcion ORDER BY d.id) FILTER (WHERE d.id IS NOT NULL), ARRAY[]::VARCHAR[]) AS articulos
+   COALESCE(array_agg(d.descripcion ORDER BY d.id) FILTER (WHERE d.id IS NOT NULL), ARRAY[]::VARCHAR[]) AS articulos,
+   COALESCE((SELECT json_agg(json_build_object('id',f.id,'nombre',f.nombre_archivo) ORDER BY f.id)
+     FROM public.documentos_impresion f WHERE f.pedido_id=p.id),'[]'::json) AS documentos
    FROM public.pedidos p LEFT JOIN public.detalle_pedido d ON d.pedido_id=p.id
    WHERE p.estado='pendiente' GROUP BY p.id ORDER BY p.fecha`);
   return rows.map(r => ({id:String(r.id),cliente:r.nombre_cliente||'Estudiante',total:num(r.total),
     fecha:r.fecha, hora:new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit'}).format(r.fecha),
-    articulos:r.articulos,estado:'pendiente'}));
+    articulos:r.articulos,documentos:r.documentos||[],estado:'pendiente'}));
 }
 async function getImpressions() {
   const {rows}=await query(`SELECT id,fecha,tipo,cantidad,precio_unitario,total,observacion
@@ -121,15 +123,31 @@ async function createOrder(order) {
   return transaction(async c=>{
     const {rows}=await c.query(`INSERT INTO public.pedidos(telegram_usuario_id,nombre_cliente,total,estado)
       VALUES($1,$2,$3,'pendiente') RETURNING id,fecha`,[order.telegramId||null,order.cliente,order.total]);
-    const id=rows[0].id;
+    const id=rows[0].id, documentos=[];
     for(const item of order.articulos) {
-      await c.query(`INSERT INTO public.detalle_pedido(pedido_id,producto_id,descripcion,cantidad,precio_unitario,subtotal)
-        VALUES($1,$2,$3,$4,$5,$6)`,[id,item.productoId||null,String(item.descripcion).slice(0,200),item.cantidad,item.precioUnitario,item.subtotal]);
+      const detalle=await c.query(`INSERT INTO public.detalle_pedido(pedido_id,producto_id,descripcion,cantidad,precio_unitario,subtotal)
+        VALUES($1,$2,$3,$4,$5,$6) RETURNING id`,[id,item.productoId||null,String(item.descripcion).slice(0,200),item.cantidad,item.precioUnitario,item.subtotal]);
+      if(item.archivo){
+        const a=item.archivo;
+        if(!/^[\w-]+$/.test(a.fileId)||!Number.isSafeInteger(a.paginas)||a.paginas<1||a.paginas>200||
+           !Number.isSafeInteger(a.copias)||a.copias<1||a.copias>30||!['bn','color'].includes(a.tipo))
+          throw new Error('Datos de archivo inválidos');
+        const doc=await c.query(`INSERT INTO public.documentos_impresion
+           (pedido_id,detalle_id,telegram_file_id,nombre_archivo,tamano_bytes,paginas,copias,tipo,doble_cara,formato)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+           [id,detalle.rows[0].id,a.fileId,String(a.nombre).slice(0,120),a.bytes||0,a.paginas,a.copias,a.tipo,a.dobleCara,a.formato]);
+        documentos.push({id:doc.rows[0].id,nombre:a.nombre});
+      }
     }
-    return { id:String(id),cliente:order.cliente,total:order.total,
+    return { id:String(id),cliente:order.cliente,total:order.total,documentos,
       articulos:order.articulos.map(a=>a.descripcion),fecha:rows[0].fecha,
       hora:new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit'}).format(rows[0].fecha),estado:'pendiente'};
   });
+}
+async function getOrderDocument(pedidoId,documentoId){
+  const {rows}=await query(`SELECT telegram_file_id,nombre_archivo,tamano_bytes
+    FROM public.documentos_impresion WHERE id=$1 AND pedido_id=$2`,[documentoId,pedidoId]);
+  return rows[0]||null;
 }
 async function completeOrder(id) {
   const r=await query(`UPDATE public.pedidos SET estado='entregado' WHERE id=$1 AND estado='pendiente' RETURNING id`,[id]);
@@ -189,4 +207,4 @@ const telegramStore={
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
 module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,
-  createProduct,editProduct,moveProduct,createOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
+  createProduct,editProduct,moveProduct,createOrder,getOrderDocument,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
