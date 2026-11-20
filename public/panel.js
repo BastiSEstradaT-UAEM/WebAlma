@@ -109,6 +109,14 @@
     const customerBody = make('div');customerBody.append(make('strong','',pedido.cliente || 'Estudiante'),make('small','',pedido.hora || 'Ahora'));
     customer.append(avatar,customerBody);head.append(customer,make('span','badge badge-orange','Por atender'));
     const items = make('div','order-items');pedido.articulos.forEach(line=>items.append(make('div','','• '+String(line))));
+    if(Array.isArray(pedido.documentos) && pedido.documentos.length){
+      const docs=make('div','order-items');docs.append(make('strong','','PDF para imprimir:'));
+      pedido.documentos.forEach(doc=>{
+        const line=make('div');const link=make('a','',`📄 ${doc.nombre}`);
+        link.href=`/pedidos/${encodeURIComponent(pedido.id)}/archivos/${encodeURIComponent(doc.id)}/descargar`;
+        line.append(link);docs.append(line);
+      });card.append(docs);
+    }
     const bottom = make('div','order-bottom');const total = make('div');total.append(make('small','','Total cotizado'),make('strong','',money(pedido.total)));
     const form = make('form');form.method='POST';form.action=`/completar_pedido/${encodeURIComponent(pedido.id)}`;
     const csrf = make('input');csrf.type='hidden';csrf.name='_csrf';csrf.value=window.WEBALMA_PANEL.csrf;

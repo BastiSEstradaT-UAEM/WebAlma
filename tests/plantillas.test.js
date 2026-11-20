@@ -21,6 +21,10 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('reportes/mensual.csv'));
   if(role==='auxiliar')assert(!html.includes('id="newProductBtn"'));
 }
+const pedidoEjemplo={id:'55',cliente:'Estudiante de prueba',total:12,hora:'12:00',articulos:['PDF Tarea.pdf'],documentos:[{id:'9',nombre:'Tarea.pdf'}]};
+const ejemploHTML=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
+  {...data,pedidosActivos:[pedidoEjemplo]},{filename:path.join(BASE,'views/gestor.ejs')});
+assert(ejemploHTML.includes('/pedidos/55/archivos/9/descargar'));
 const login=ejs.render(fs.readFileSync(path.join(BASE,'views/login.ejs'),'utf8'),{error:false,csrf:'test'});
 assert(login.includes('login'));
 console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
