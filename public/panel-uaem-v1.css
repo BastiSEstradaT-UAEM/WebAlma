@@ -223,3 +223,25 @@ body{background:#f5f8f3}
 @media(prefers-reduced-motion:reduce){
   .nav-item,.btn{transition:none}
 }
+/* No repetir la identificación lateral en la parte superior del Dashboard. */
+.mobile-menu-bar{display:none}
+@media(max-width:780px){
+  /* En móvil, el lateral está oculto: es esencial conservar el botón de acceso. */
+  .mobile-menu-bar{
+    display:flex;align-items:center;
+    height:54px;padding:0 16px;
+    position:sticky;top:0;z-index:20;
+    background:#fffef8;
+    border-bottom:1px solid #dce8da;
+    box-shadow:inset 0 -2px #f2d275;
+  }
+  .mobile-menu-bar .hamburger{
+    display:grid;
+    place-items:center;
+    color:#0c6142;
+    width:38px;height:38px;
+    border:1px solid #dce8da;
+    border-radius:9px;
+  }
+  .mobile-menu-bar .ico{width:21px;height:21px}
+}
