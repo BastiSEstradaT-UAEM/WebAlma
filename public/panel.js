@@ -17,7 +17,6 @@
     const view = Object.hasOwn(sections, name) ? name : 'resumen';
     $$('[data-view]').forEach(el => el.hidden = el.dataset.view !== view);
     $$('[data-nav]').forEach(el => { el.classList.toggle('active', el.dataset.nav === view); el.setAttribute('aria-current',el.dataset.nav===view?'page':'false'); });
-    $('#currentViewName').textContent = sections[view];
     $('#sidebar').classList.remove('open');
     history.replaceState(null,'',`/gestor?seccion=${encodeURIComponent(view)}`);
     window.scrollTo({top:0,behavior:'instant'});
@@ -27,8 +26,6 @@
   if ($('#openSidebar')) $('#openSidebar').addEventListener('click', () => $('#sidebar').classList.add('open'));
   if ($('#closeSidebar')) $('#closeSidebar').addEventListener('click', () => $('#sidebar').classList.remove('open'));
   show(document.body.dataset.initialSection || 'resumen');
-  const today = $('#todayDate');
-  if (today) today.textContent = new Intl.DateTimeFormat('es-MX',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Mexico_City'}).format(new Date());
 
   const flash = $('[data-flash]');
   const messages = {producto_agregado:'Producto agregado al catálogo.',producto_actualizado:'Producto actualizado correctamente.',movimiento_registrado:'Movimiento de inventario registrado.',impresion_registrada:'Servicio de impresión registrado.',pedido_entregado:'Pedido marcado como entregado.',pedido_aceptado:'Pedido aceptado. Se notificó al estudiante por Telegram.',pedido_rechazado:'Pedido rechazado. Se notificó al estudiante por Telegram.',pedido_aceptado_sin_aviso:'Pedido aceptado, pero Telegram no pudo entregar el aviso.',pedido_rechazado_sin_aviso:'Pedido rechazado, pero Telegram no pudo entregar el aviso.',pedido_entregado_sin_aviso:'Pedido entregado; no se pudo enviar aviso por Telegram.',pedido_aceptado_sin_destinatario:'Pedido aceptado; no hay cuenta de Telegram asociada.',pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',configuracion_guardada:'Configuración guardada.',datos_invalidos:'Revisa los datos del formulario.',movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',pedido_no_encontrado:'El pedido ya no está pendiente.'};
