@@ -3,11 +3,11 @@
 // Control de transiciones. Nunca se permite aceptar/rechazar dos veces el mismo pedido.
 const OPERACIONES=Object.freeze({
   aceptar:{desde:'pendiente',hacia:'aceptado',mensaje:id=>
-    `✅ WebAlma · Pedido #${id} ACEPTADO\n\nLa papelería aceptó tu solicitud. Puedes acudir al mostrador según las indicaciones del personal.\n\nImportante: el pedido no se considera pagado ni preparado automáticamente.`},
+    `🦆💚💛 · Pedido #${id} ACEPTADO\n\nLa papelería aceptó tu solicitud. Puedes acudir al mostrador según las indicaciones del personal.\n\nImportante: el pedido no se considera pagado ni preparado automáticamente.`},
   rechazar:{desde:'pendiente',hacia:'rechazado',mensaje:id=>
     `❌ WebAlma · Pedido #${id} RECHAZADO\n\nLa papelería no pudo aceptar tu solicitud. Puedes enviar un nuevo pedido o consultar directamente en el mostrador. No se realizó ningún cobro.`},
   entregar:{desde:'aceptado',hacia:'entregado',mensaje:id=>
-    `📦 WebAlma · Pedido #${id} ENTREGADO\n\nLa papelería ha marcado tu solicitud como entregada. ¡Gracias por utilizar WebAlma!`}
+    `🦆💚💛 · Pedido #${id} ENTREGADO\n\nLa papelería ha marcado tu solicitud como entregada. ¡Gracias por utilizar WebAlma!`}
 });
 
 async function procesarEstadoPedido({id,accion,cambiarEstado,enviarMensaje}){
