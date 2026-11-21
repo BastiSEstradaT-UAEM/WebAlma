@@ -43,10 +43,11 @@ function buildReportActivity(summaryRows,dayRows,recentRows,pdfRow,bounds,today)
   // dayRows puede contener fecha sin información de dinero, no se inventan importes por día.
   for(const row of dayRows){
     const d=byDay.get(String(row.dia).slice(0,10));
-    if(d)d.total+=count(row.cantidad);
+    if(d){d.total+=count(row.cantidad);d.cotizado+=num(row.cotizado);}
   }
   const days=[...byDay.values()];
   const weeklyCount=days.reduce((sum,d)=>sum+d.total,0);
+  const weeklyQuoted=days.reduce((sum,d)=>sum+d.cotizado,0);
   const maxPerDay=Math.max(1,...days.map(d=>d.total));
   days.forEach(d=>{d.height=d.total===0?0:Math.round(d.total/maxPerDay*100);});
   const recent=recentRows.map(r=>({
@@ -56,7 +57,7 @@ function buildReportActivity(summaryRows,dayRows,recentRows,pdfRow,bounds,today)
     items:count(r.articulos),pdf:count(r.pdf),total:num(r.total)
   }));
   return {
-    allCount,allCotizado,states,days,weeklyCount,weeklyQuoted:null,
+    allCount,allCotizado,states,days,weeklyCount,weeklyQuoted,
     totalPdf:count(pdfRow?.total_pdf),ordersWithPdf:count(pdfRow?.pedidos_pdf),
     recent,today:String(today||''),start:bounds.start,end:bounds.end
   };
