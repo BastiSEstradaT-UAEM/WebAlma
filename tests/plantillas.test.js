@@ -72,6 +72,8 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('CU UAEM Valle de Chalco'));
   assert(html.includes('Centro Universitario UAEM Valle de Chalco'));
   assert(html.includes('escudo-uaem-nitido.svg'));
+  assert(html.includes('<link rel="icon" type="image/svg+xml" sizes="any" href="/public/escudo-uaem-nitido.svg?v=2">'));
+  assert(!html.includes('rel="icon" href="/favicon.ico"'));
   assert(!html.includes('/public/escudo-uaem.webp'));
   assert(html.includes('WebAlma'));
   if(role==='administradora') { 
@@ -235,6 +237,8 @@ const cuxiAsset=fs.readFileSync(path.join(BASE,'public/cuxi-webalma-nitido.svg')
 assert(cuxiAsset.includes('data:image/avif;base64,'),'La nueva ilustración de Cuxi debe incluir el recurso de alta definición');
 assert(cuxiAsset.length>15000,'El recurso de Cuxi no debe ser una miniatura vacía');
 assert(login.includes('escudo-uaem-nitido.svg'));
+assert(login.includes('<link rel="icon" type="image/svg+xml" sizes="any" href="/public/escudo-uaem-nitido.svg?v=2">'));
+assert(!login.includes('rel="icon" href="/favicon.ico"'));
 assert(!login.includes('/public/escudo-uaem.webp'));
 assert(login.includes('method="post"'));
 assert(login.includes('name="_csrf"'));
