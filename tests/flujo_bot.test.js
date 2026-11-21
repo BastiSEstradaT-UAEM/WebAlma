@@ -4,10 +4,11 @@ const path=require('node:path');
 const modulePath=path.resolve(__dirname,'..');
 process.env.TELEGRAM_BOT_TOKEN='123456:TEST_ONLY';
 const storage=new Map();let registrado;
+let liveConfig={precioBN:1,precioColor:5,horario:'07:00 a 19:00',aviso:'Abrimos el sábado a las 8',preciosValidados:true};
 const dbMock={
   telegramStore:{get:async k=>storage.get(k),set:async(k,v)=>{storage.set(k,v)},delete:async k=>{storage.delete(k)}},
   getInventory:async()=>[{id:1,producto:'Cuaderno Scribe',categoria:'Cuadernos',precio:25,stock:10}],
-  getConfig:async()=>({precioBN:1,precioColor:5})
+  getConfig:async()=>({...liveConfig})
 };
 const dbId=require.resolve(path.join(modulePath,'db.js'));
 require.cache[dbId]={id:dbId,filename:dbId,loaded:true,exports:dbMock};
@@ -26,7 +27,18 @@ async function msg(text){await bot.handleUpdate({update_id:n++,message:{message_
 async function cb(data){await bot.handleUpdate({update_id:n++,callback_query:{id:String(n),from,message:{message_id:66,date:1,chat},chat_instance:'xyz',data}});}
 async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n,date:1,from,chat,document:{file_id:'ABCD_1234',file_name:'Tarea.pdf',mime_type:'application/pdf',file_size:500}}});}
 (async()=>{
-  await msg('/start');await cb('pdf_inicio');await doc();
+  await msg('/start');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('07:00 a 19:00')),'El menú comunica el horario');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Abrimos el sábado a las 8')),'El menú comunica el aviso');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$5.00')),'El menú muestra tarifa por cara');
+  liveConfig={...liveConfig,precioBN:2,precioColor:4,horario:'09:00 a 17:00',aviso:'Hoy cerramos antes'};
+  await cb('informacion');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Hoy cerramos antes')),'El horario se consulta en tiempo real');
+  await cb('tarifas');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$4.00')),'Las tarifas reflejan los cambios en PostgreSQL');
+  // Recuperar tarifas iniciales para el caso PDF de cotización existente.
+  liveConfig={precioBN:1,precioColor:5,horario:'07:00 a 19:00',aviso:'',preciosValidados:false};
+  await cb('pdf_inicio');await doc();
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('12')));
   await cb('pdf_tipo:color');await cb('pdf_copias:2');await cb('pdf_caras:doble');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$120')));
@@ -39,5 +51,5 @@ async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n
   assert.equal(registrado.articulos[0].archivo.fileId,'ABCD_1234');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('17')));
   await cb('carrito');assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('vacío')));
-  console.log('Flujo Telegram simulado: PDF, cotización, carrito, registro, vaciado OK (analizador PDF simulado).');
+  console.log('Flujo Telegram simulado: horario, aviso, tarifas actualizadas, PDF, carrito y pedido OK.');
 })().catch(e=>{console.error(e);process.exitCode=1;});
