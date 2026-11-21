@@ -25,6 +25,12 @@ for(const role of ['administradora','auxiliar']) {
   const html=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
     {...data,usuario:{id:1,nombre:'Prueba',rol:role}},{filename:path.join(BASE,'views/gestor.ejs')});
   assert(html.includes('Libreta de prueba'));
+  assert(!html.includes('Datos en validación:'));
+  assert(!html.includes('gran parte de los precios y existencias son de prueba'));
+  assert(!html.includes('Confirmen los datos físicos con la propietaria'));
+  assert(!html.includes('class="notice-bar"'));
+  assert(html.includes('Stock por revisar'));
+  assert(html.includes('id="reportHistoryFilter"'));
   assert(html.includes('Corte mensual'));
   assert(html.includes('Pedidos de la semana'));
   assert(html.includes('Estado de los pedidos'));
