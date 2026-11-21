@@ -175,7 +175,7 @@ function createBot(onOrder){
           cantidad:i.cantidad,precioUnitario:i.precioUnitario,subtotal:i.subtotal,archivo:i.archivo||null}))};
       const r=await onOrder(pedido);ctx.session.carrito=[];ctx.session.pdfPendiente=null;
       await ctx.editMessageReplyMarkup({inline_keyboard:[]}).catch(()=>{});
-      return ctx.reply(`✅ Solicitud registrada${r?.id?' · Folio '+r.id:''}\nTotal estimado: ${pesos(q.total)}\nNo está pagada ni preparada; espera la confirmación en mostrador.`,inicio());
+      return ctx.reply(`✅ Solicitud registrada${r?.id?' · Folio '+r.id:''}\nTotal estimado: ${pesos(q.total)}\nTu pedido está pendiente de revisión. Recibirás un aviso por Telegram cuando sea aceptado o rechazado. No está pagado ni preparado.`,inicio());
     }catch(e){console.error('No se pudo registrar pedido:',e.code||e.name);return ctx.reply('⚠️ No fue posible registrar el pedido. No se ha confirmado; inténtalo más tarde.');}
     finally{ctx.session.registrando=false;}
   });
