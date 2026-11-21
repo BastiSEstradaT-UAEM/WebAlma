@@ -10,8 +10,8 @@ const kb=rows=>Markup.inlineKeyboard(rows.map(row=>row.map(([label,id])=>Markup.
 const inicio=()=>kb([
   [['📚 Ver productos','productos'],['🖨 Cotizar impresiones','impresiones']],
   [['📄 Cotizar PDF','pdf_inicio'],['🛒 Mi carrito','carrito']],
-  [['🕒 Horarios y avisos','informacion'],['💰 Tarifas','tarifas']],
-  [['✅ Finalizar pedido','checkout'],['ℹ️ Ayuda','ayuda']]
+  [['💰 Tarifas','tarifas'],['ℹ️ Ayuda','ayuda']],
+  [['✅ Finalizar pedido','checkout']]
 ]);
 const seguir=()=>kb([[['📚 Productos','productos'],['📄 PDF','pdf_inicio']],[['🛒 Mi carrito','carrito'],['✅ Finalizar','checkout']]]);
 function precioMenu(){return kb([[['1 copia','pdf_copias:1'],['2 copias','pdf_copias:2'],['3 copias','pdf_copias:3']],[['5 copias','pdf_copias:5'],['10 copias','pdf_copias:10']],[['✏️ Otra cantidad','pdf_copias:otra']],[['⬅️ Menú','inicio']]]);}
@@ -48,9 +48,14 @@ function createBot(onOrder,{ahora=()=>new Date()}={}){
       '\n• A color: '+pesos(cfg.precioColor)+'\n'+leyenda;
   }
   async function menu(ctx){
-    return ctx.reply('📘 WebAlma · Papelería universitaria UAEM Valle de Chalco\n\n'+
-      '👋 ¡Hola! Bienvenido a la papelería universitaria.\n\n'+
+    // Usar el nombre público de Telegram; no pedir datos personales adicionales.
+    const nombre=String(ctx.from?.first_name||'').replace(/\s+/g,' ').trim().slice(0,60)||'estudiante';
+    // Mostrar avisos configurados desde el panel sin un botón dedicado.
+    const aviso=String((await db.getConfig()).aviso||'').trim();
+    return ctx.reply('📘 Papelería universitaria UAEM Valle de Chalco 🦆💚💛\n\n'+
+      `👋 ¡Hola, ${nombre}! Bienvenido a la papelería universitaria.\n\n`+
       'Estoy aquí para ayudarte a consultar productos, conocer precios y cotizar tus impresiones.\n\n'+
+      (aviso?`📢 Aviso: ${aviso}\n\n`:'')+
       '¿Qué necesitas hoy? 😊',inicio());
   }
   async function enter(ctx){await ctx.answerCbQuery().catch(()=>{});}
@@ -71,7 +76,7 @@ function createBot(onOrder,{ahora=()=>new Date()}={}){
   bot.action('informacion',async ctx=>{await enter(ctx);return mostrarInformacion(ctx);});
   bot.action('tarifas',async ctx=>{await enter(ctx);return mostrarTarifas(ctx);});
   bot.action('inicio',async ctx=>{await enter(ctx);ctx.session.pdfPendiente=null;ctx.session.esperando=null;return menu(ctx);});
-  bot.action('ayuda',async ctx=>{await enter(ctx);return ctx.reply('Usa los botones para ver productos o enviar un PDF. También puedes escribir «2 plumas» o «5 impresiones a color». Consulta los horarios y avisos desde el menú. La papelería confirma las solicitudes en mostrador.',inicio());});
+  bot.action('ayuda',async ctx=>{await enter(ctx);return ctx.reply('Usa los botones para ver productos o enviar un PDF. También puedes escribir «2 plumas» o «5 impresiones a color». Si necesitas consultar el horario, escribe «horario». La papelería confirma las solicitudes en mostrador.',inicio());});
   bot.action('impresiones',async ctx=>{await enter(ctx);return ctx.reply('🖨️ Para cotizar impresiones sin archivo, escribe por ejemplo:\n• 5 impresiones a color\n• 10 impresiones blanco y negro\n\nPara cotizar un documento completo, selecciona PDF.',kb([[['📄 Enviar PDF','pdf_inicio']],[['⬅️ Menú','inicio']]]));});
   bot.action('pdf_inicio',async ctx=>{await enter(ctx);return ctx.reply('📄 Envíame tu archivo *PDF como documento* por este chat privado. Detectaré el número de páginas y el tamaño; luego elegirás color, copias y doble cara.\n\nLímite de demostración: 8 MB y 200 páginas. Evita documentos con datos sensibles.',{parse_mode:'Markdown',...kb([[['⬅️ Menú','inicio']]])});});
 
