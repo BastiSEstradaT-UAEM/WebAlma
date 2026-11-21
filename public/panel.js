@@ -47,6 +47,7 @@
     if (field) field.addEventListener(id === 'inventorySearch' ? 'input' : 'change', filterInventory);
   });
   const productModal = $('#productModal'), movementModal = $('#movementModal');
+  const archiveForm = $('#archiveProductForm');
   const closeModals = () => { if(productModal)productModal.hidden = true; if(movementModal)movementModal.hidden = true; };
   $$('.close-modal').forEach(b => b.addEventListener('click',closeModals));
   $$('.modal-backdrop').forEach(modal => modal.addEventListener('mousedown',e => { if(e.target === modal)closeModals(); }));
@@ -54,6 +55,7 @@
   if ($('#newProductBtn')) $('#newProductBtn').addEventListener('click', () => {
     $('#productForm').reset();
     $('#productForm').action = '/inventario/nuevo';
+    if (archiveForm) archiveForm.hidden = true;
     $('#productModalTitle').textContent = 'Nuevo producto';
     $('#initialStockField').hidden = false;
     $('#formStock').disabled = false;
@@ -63,6 +65,11 @@
   $$('.edit-btn').forEach(b => b.addEventListener('click', () => {
     const d = b.dataset;
     $('#productForm').action = `/inventario/${encodeURIComponent(d.id)}/editar`;
+    if (archiveForm) {
+      archiveForm.action = `/inventario/${encodeURIComponent(d.id)}/archivar`;
+      archiveForm.dataset.confirm = `¿Eliminar «${d.name}» del catálogo de WebAlma? Desaparecerá también de Telegram, pero se conservarán los pedidos y movimientos anteriores.`;
+      archiveForm.hidden = false;
+    }
     $('#productModalTitle').textContent = `Editar producto #${d.id}`;
     $('#formProductName').value = d.name;
     $('#formCategory').value = d.category;
