@@ -15,6 +15,12 @@ const {OPERACIONES,procesarEstadoPedido}=require('../pedidos_estado');
     assert.equal(envio.id,'12345678');
     assert.match(envio.mensaje,/42/);
   }
+  // La identidad visual cambia solo el encabezado; no modifica estados ni notificaciones.
+  assert.equal(OPERACIONES.aceptar.mensaje(42).split('\n')[0], '🦆💚💛 · Pedido #42 ACEPTADO');
+  assert.equal(OPERACIONES.entregar.mensaje(42).split('\n')[0], '🦆💚💛 · Pedido #42 ENTREGADO');
+  assert.equal(OPERACIONES.rechazar.mensaje(42).split('\n')[0], '❌ WebAlma · Pedido #42 RECHAZADO');
+  assert.match(OPERACIONES.aceptar.mensaje(42), /no se considera pagado ni preparado/);
+  assert.match(OPERACIONES.entregar.mensaje(42), /¡Gracias por utilizar WebAlma!/);
   let avisos=0;
   const duplicado=await procesarEstadoPedido({id:42,accion:'aceptar',
     cambiarEstado:async()=>null,enviarMensaje:async()=>{avisos++;}});
