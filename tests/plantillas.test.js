@@ -68,7 +68,18 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('escudo-uaem.webp'));
   assert(html.includes('WebAlma'));
   assert(html.includes('reportes/mensual.csv'));
-  if(role==='auxiliar')assert(!html.includes('id="newProductBtn"'));
+  if(role==='administradora') {
+    assert(html.includes('id="archiveProductForm"'));
+    assert(html.includes('id="archiveProductBtn"'));
+    assert(html.includes('Eliminar del catálogo'));
+    assert(html.includes('data-confirm="¿Retirar este artículo del catálogo?'));
+    assert(html.includes('id="archiveProductForm" class="archive-product-form" method="post"'));
+    assert(html.includes('name="_csrf" value="test-csrf"'));
+  } else {
+    assert(!html.includes('id="newProductBtn"'));
+    assert(!html.includes('id="archiveProductForm"'));
+    assert(!html.includes('id="archiveProductBtn"'));
+  }
 }
 // El mensaje de éxito debe llegar en el HTML: JS puede estar desactivado o cacheado.
 const template=fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8');
@@ -90,6 +101,19 @@ const panelScript=fs.readFileSync(path.join(BASE,'public/panel.js'),'utf8');
 assert(!panelScript.includes("$('#currentViewName')"));
 assert(!panelScript.includes("$('#todayDate')"));
 assert(panelScript.includes("$('#openSidebar')"));
+assert(panelScript.includes("$('#archiveProductForm')"));
+assert(panelScript.includes("/archivar"));
+assert(panelScript.includes('archiveForm.hidden = true'));
+assert(panelScript.includes('archiveForm.hidden = false'));
+const dbSource=fs.readFileSync(path.join(BASE,'db.js'),'utf8');
+const serverSource=fs.readFileSync(path.join(BASE,'servidor_web.js'),'utf8');
+assert(dbSource.includes('UPDATE public.productos SET activo=FALSE WHERE id=$1 AND activo=TRUE RETURNING id'));
+assert(!dbSource.includes('DELETE FROM public.productos'));
+assert(dbSource.includes('WHERE p.activo = TRUE ORDER BY p.id'));
+assert(serverSource.includes("app.post('/inventario/:id/archivar',auth,admin,csrf,async(req,res)=>{"));
+assert(serverSource.includes("io.emit('inventario_actualizado')"));
+assert(serverSource.includes("producto_archivado:'Producto retirado del catálogo. Su historial se conserva.'"));
+
 const institutionalCss=fs.readFileSync(path.join(BASE,'public/panel-uaem-v1.css'),'utf8');
 assert(institutionalCss.includes('.mobile-menu-bar{display:none}'));
 assert(institutionalCss.includes('.mobile-menu-bar .hamburger'));

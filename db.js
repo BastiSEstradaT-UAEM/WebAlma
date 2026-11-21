@@ -141,6 +141,14 @@ async function editProduct(id,data) {
     return result.rowCount>0;
   });
 }
+// Baja lógica: elimina del catálogo visible sin destruir lotes, movimientos o pedidos.
+async function archiveProduct(id) {
+  const result = await query(
+    'UPDATE public.productos SET activo=FALSE WHERE id=$1 AND activo=TRUE RETURNING id',
+    [id]
+  );
+  return result.rowCount > 0;
+}
 async function moveProduct(id,tipo,cantidad,nota,usuarioId=null,registradoPor=null) {
   return transaction(async c=>{
     const result=await c.query('SELECT id,stock FROM public.productos WHERE id=$1 AND activo=TRUE FOR UPDATE',[id]);
@@ -262,4 +270,4 @@ const telegramStore={
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
 module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,getReportActivity,getReportHistory,
-  createProduct,editProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
+  createProduct,editProduct,archiveProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
