@@ -333,6 +333,7 @@ async function start(){
   const configCheck=await db.query('SELECT 1 FROM public.configuracion WHERE id=1');
   if(!configCheck.rows.length)throw new Error('Falta ejecutar 01_actualizacion_segura.sql');
   await db.ensureInitialUsers();
+  await db.ensureNoticeConfig();
   await asegurarEstadosPedido(db.pool);
   await new Promise(resolve=>server.listen(PORT,'0.0.0.0',resolve));
   console.log(`WebAlma web escuchando en puerto ${PORT}`);
