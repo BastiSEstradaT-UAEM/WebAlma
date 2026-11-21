@@ -2,6 +2,8 @@
 const {Telegraf,Markup,session}=require('telegraf');
 const db=require('./db');
 const {analizarPDF,descargarPDFTelegram,cotizarPDF,MAX_BYTES}=require('./pdf_cotizador');
+const {estaAbierto,horarioLegible}=require('./horario_atencion');
+const MENSAJE_CERRADO='🌙 En este momento no estamos disponibles. ¡Nos vemos pronto!';
 const normalize=s=>String(s||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 const pesos=n=>Number(n).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
 const kb=rows=>Markup.inlineKeyboard(rows.map(row=>row.map(([label,id])=>Markup.button.callback(label,id))));
@@ -19,9 +21,23 @@ function createBot(onOrder){
   bot.use(session({store:db.telegramStore}));
   bot.use((ctx,next)=>{ctx.session??={};ctx.session.carrito??=[];return next();});
   bot.catch((err,ctx)=>{console.error('Telegram: error en actualización',ctx.updateType,err.code||err.name);});
+  // Guard global: bloquea /start, mensajes, archivos PDF y botones antiguos
+  // cuando la papelería está cerrada. Sin teclado ni registro de pedidos.
+  bot.use(async(ctx,next)=>{
+    if(ctx.updateType!=='message'&&ctx.updateType!=='callback_query')return next();
+    const cfg=await db.getConfig();
+    if(estaAbierto(cfg.horario)!==false)return next();
+    if(ctx.callbackQuery){
+      await ctx.answerCbQuery('La papelería está cerrada por el momento.').catch(()=>{});
+      // Solo se oculta el teclado del mensaje presionado: Telegram no permite
+      // quitar de forma retroactiva los botones de todo el historial del chat.
+      await ctx.editMessageReplyMarkup({inline_keyboard:[]}).catch(()=>{});
+    }
+    return ctx.reply(MENSAJE_CERRADO);
+  });
   // Cada entrada al menú lee PostgreSQL. No se almacena en caché la configuración pública.
   function informacionPublica(cfg){
-    const horario=String(cfg.horario||'Por confirmar');
+    const horario=horarioLegible(cfg.horario);
     const aviso=String(cfg.aviso||'').trim();
     return '🕒 Horario de la papelería: '+horario+
       (aviso?'\n📢 Aviso del establecimiento: '+aviso:'\n📢 Sin avisos especiales.');
@@ -32,10 +48,10 @@ function createBot(onOrder){
       '\n• A color: '+pesos(cfg.precioColor)+'\n'+leyenda;
   }
   async function menu(ctx){
-    const cfg=await db.getConfig();
-    return ctx.reply('📘 WebAlma · Papelería universitaria UAEM Valle de Chalco\n'+
-      'Consulta productos, cotiza tus impresiones o envía un PDF.\n\n'+
-      informacionPublica(cfg)+'\n\n'+tarifasPublicas(cfg)+'\n\n¿Qué deseas hacer?',inicio());
+    return ctx.reply('📘 WebAlma · Papelería universitaria UAEM Valle de Chalco\n\n'+
+      '👋 ¡Hola! Bienvenido a la papelería universitaria.\n\n'+
+      'Estoy aquí para ayudarte a consultar productos, conocer precios y cotizar tus impresiones.\n\n'+
+      '¿Qué necesitas hoy? 😊',inicio());
   }
   async function enter(ctx){await ctx.answerCbQuery().catch(()=>{});}
   bot.start(menu);
@@ -205,6 +221,8 @@ function createBot(onOrder){
       const pedido={cliente:String(ctx.from?.first_name||'Estudiante').slice(0,100),telegramId:ctx.from?.id,total:q.total,
         articulos:q.items.map(i=>({productoId:i.tipo==='producto'?i.productoId:null,descripcion:i.descripcion,
           cantidad:i.cantidad,precioUnitario:i.precioUnitario,subtotal:i.subtotal,archivo:i.archivo||null}))};
+      // Verificación final por si el horario terminó durante la cotización.
+      if(estaAbierto((await db.getConfig()).horario)===false)return ctx.reply(MENSAJE_CERRADO);
       const r=await onOrder(pedido);ctx.session.carrito=[];ctx.session.pdfPendiente=null;
       await ctx.editMessageReplyMarkup({inline_keyboard:[]}).catch(()=>{});
       return ctx.reply(`✅ Solicitud registrada${r?.id?' · Folio '+r.id:''}\nTotal estimado: ${pesos(q.total)}\nTu pedido está pendiente de revisión. Recibirás un aviso por Telegram cuando sea aceptado o rechazado. No está pagado ni preparado.`,inicio());
