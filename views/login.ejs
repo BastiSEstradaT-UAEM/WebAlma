@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#064b31">
-  <meta name="description" content="Acceso al sistema WebAlma: papelería del Centro Universitario UAEM Valle de Chalco.">
+  <meta name="theme-color" content="#085238">
+  <meta name="description" content="Acceso al panel WebAlma de la papelería universitaria del Centro Universitario UAEM Valle de Chalco.">
   <title>Ingresar · WebAlma | UAEM Valle de Chalco</title>
-  <link rel="stylesheet" href="/public/login-uaem-v2.css?v=2">
+  <link rel="stylesheet" href="/public/login-uaem-v3.css?v=3">
 </head>
 <body class="login-uaem">
   <div class="login-decor one" aria-hidden="true"></div>
@@ -42,48 +42,78 @@
             <label for="password">Contraseña</label>
             <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Ingresa tu contraseña">
           </div>
-          <button type="submit" class="btn btn-primary full">Entrar al panel <span aria-hidden="true">→</span></button>
+          <button type="submit" class="btn-primary">
+            Entrar al panel
+            <svg class="button-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-7-7 7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </form>
       </div>
 
       <footer class="login-footer">
-        <span aria-hidden="true" class="uaem-footer-line"></span>
-        WebAlma · Sistema de gestión universitaria · 2026
-        <span aria-hidden="true" class="uaem-footer-line"></span>
+        <span class="uaem-footer-line" aria-hidden="true"></span>
+        WebAlma · Sistema de gestión local · 2026
+        <span class="uaem-footer-line" aria-hidden="true"></span>
       </footer>
     </main>
 
-    <aside class="login-side" aria-label="Identidad universitaria y servicios de WebAlma">
-      <div class="uaem-hexagons" aria-hidden="true"></div>
+    <aside class="login-side" aria-label="Universidad Autónoma del Estado de México, Centro Universitario UAEM Valle de Chalco. Cuxi y servicios de WebAlma">
+      <svg class="uaem-panel-shape" viewBox="0 0 820 815" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-40 420C192 215 360 200 490 82c-64 203-145 283-250 390C140 563 23 565-40 550Z" fill="#2a8357" opacity=".30"/>
+        <path d="M-40 706c215-158 322-140 456-198 107-44 227-140 439-190v500H-40Z" fill="#2c8259" opacity=".24"/>
+      </svg>
+      <svg class="uaem-hexagons" viewBox="0 0 220 160" fill="none" stroke="#efd67a" stroke-width="1.6" aria-hidden="true">
+        <path d="M50 0 75 14v29L50 57 25 43V14ZM103 0l25 14v29l-25 14-25-14V14ZM156 0l25 14v29l-25 14-25-14V14ZM210 0l25 14v29l-25 14-25-14V14Z"/>
+        <path d="M76 44 101 58v29L76 101 51 87V58ZM129 44l25 14v29l-25 14-25-14V58ZM182 44l25 14v29l-25 14-25-14V58Z"/>
+        <path d="m103 88 25 14v29l-25 14-25-14v-29ZM156 88l25 14v29l-25 14-25-14v-29Z"/>
+      </svg>
       <header class="uaem-institution">
-        <img src="/public/escudo-uaem.webp" width="108" height="96" alt="Escudo de la Universidad Autónoma del Estado de México">
+        <img src="/public/escudo-uaem.webp" width="113" height="113" alt="Escudo de la Universidad Autónoma del Estado de México">
         <div class="uaem-institution-copy">
           <strong>Universidad Autónoma<br>del Estado de México</strong>
           <span>Centro Universitario UAEM<br>Valle de Chalco</span>
         </div>
       </header>
 
-      <div class="uaem-side-content">
-        <div class="uaem-mascot">
-          <img src="/public/cuxi-papeleria.webp" width="300" height="426" alt="Cuxi, mascota de la comunidad universitaria, con libreta, útiles de papelería y pulgar arriba">
-        </div>
-
-        <div class="uaem-side-information">
-          <div class="uaem-side-title">
-            <h2>WebAlma</h2>
-            <span class="uaem-yellow-tag">Papelería universitaria</span>
-            <p>Centro Universitario UAEM<br>Valle de Chalco</p>
-          </div>
-
-          <div class="uaem-feature-list">
-            <div class="uaem-feature"><span class="uaem-feature-icon" aria-hidden="true">▣</span><div><strong>Inventario</strong><small>Control de productos<br>de papelería</small></div></div>
-            <div class="uaem-feature"><span class="uaem-feature-icon" aria-hidden="true">🛒</span><div><strong>Pedidos</strong><small>Atención y seguimiento<br>de solicitudes</small></div></div>
-            <div class="uaem-feature"><span class="uaem-feature-icon" aria-hidden="true">▤</span><div><strong>Papelería</strong><small>Material y suministros<br>para la comunidad</small></div></div>
-          </div>
-          <p class="uaem-side-slogan">Servicio de papelería<br>para nuestra comunidad<br>universitaria.</p>
-        </div>
+      <div class="uaem-mascot">
+        <img src="/public/cuxi-papeleria.webp" width="300" height="426" alt="Cuxi con una libreta de WebAlma, lápices, tijeras, libros y un pulgar arriba">
       </div>
-      <div class="uaem-side-wave" aria-hidden="true"></div>
+
+      <div class="uaem-side-information">
+        <div class="uaem-side-title">
+          <h2>WebAlma</h2>
+          <svg class="uaem-sparkle" viewBox="0 0 60 60" aria-hidden="true" stroke="#ffcf39" stroke-width="7" stroke-linecap="round">
+            <path d="M9 12 4 4m28 12V4m15 22 11-6"/>
+          </svg>
+          <span class="uaem-yellow-tag">Papelería universitaria</span>
+          <p>Centro Universitario UAEM<br>Valle de Chalco</p>
+        </div>
+        <div class="uaem-feature-list">
+          <div class="uaem-feature">
+            <span class="uaem-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 36 36"><path d="M5 11.5 18 5l13 6.5v16L18 34 5 27.5Z"/><path d="m5 11.5 13 7 13-7M18 18.5V34"/></svg>
+            </span>
+            <div><strong>Inventario</strong><small>Control de productos<br>de papelería</small></div>
+          </div>
+          <div class="uaem-feature">
+            <span class="uaem-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 36 36"><path d="M3 5h5l4 20h17l4-14H10M14 30.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6M28 30.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6"/></svg>
+            </span>
+            <div><strong>Pedidos</strong><small>Atención y seguimiento<br>de solicitudes</small></div>
+          </div>
+          <div class="uaem-feature">
+            <span class="uaem-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 36 36"><path d="m3 12 15-7 15 7-15 8-15-8ZM3 19l15 8 15-8M3 26l15 8 15-8"/></svg>
+            </span>
+            <div><strong>Papelería</strong><small>Material y suministros<br>para la comunidad universitaria</small></div>
+          </div>
+        </div>
+        <div><p class="uaem-side-slogan">Servicio de papelería<br>para nuestra comunidad<br>universitaria.</p><span class="uaem-slogan-underline" aria-hidden="true"></span></div>
+      </div>
+
+      <svg class="uaem-side-wave" viewBox="0 0 820 110" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 76C170 41 338 84 472 72c128-12 223-65 348-56v94H0Z" fill="#f2c53c"/>
+        <path d="M0 61c143-45 262 3 404 3C565 64 699-21 820 11v26C659 1 559 82 386 93 241 102 123 55 0 100Z" fill="#fcf7e9"/>
+      </svg>
     </aside>
   </div>
 </body>
