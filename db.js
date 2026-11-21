@@ -67,7 +67,7 @@ async function getOrders() {
  */
 async function getReportActivity(bounds,today){
   const {buildReportActivity}=require('./reportes_actividad');
-  const [summary,daily,recent,pdf]=await Promise.all([
+  const [summary,daily,pdf]=await Promise.all([
     query(`SELECT estado, COUNT(*)::integer AS cantidad,
       COALESCE(SUM(total),0) AS cotizado
       FROM public.pedidos GROUP BY estado`),
@@ -76,17 +76,11 @@ async function getReportActivity(bounds,today){
       FROM public.pedidos
       WHERE (fecha AT TIME ZONE 'America/Mexico_City')::date BETWEEN $1::date AND $2::date
       GROUP BY 1,2 ORDER BY 1,2`,[bounds.start,bounds.end]),
-    query(`SELECT p.id, to_char(p.fecha AT TIME ZONE 'America/Mexico_City','YYYY-MM-DD') AS dia,
-      to_char(p.fecha AT TIME ZONE 'America/Mexico_City','HH24:MI') AS hora,
-      p.estado,p.total,
-      (SELECT COUNT(*)::integer FROM public.detalle_pedido d WHERE d.pedido_id=p.id) AS articulos,
-      (SELECT COUNT(*)::integer FROM public.documentos_impresion f WHERE f.pedido_id=p.id) AS pdf
-      FROM public.pedidos p ORDER BY p.fecha DESC,p.id DESC LIMIT 150`),
     query(`SELECT COUNT(*)::integer AS total_pdf,
       COUNT(DISTINCT pedido_id)::integer AS pedidos_pdf
       FROM public.documentos_impresion`)
   ]);
-  return buildReportActivity(summary.rows,daily.rows,recent.rows,pdf.rows[0],bounds,today);
+  return buildReportActivity(summary.rows,daily.rows,[],pdf.rows[0],bounds,today);
 }
 
 /**
