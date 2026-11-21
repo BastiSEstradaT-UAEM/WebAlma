@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=1">
   <link rel="stylesheet" href="/public/reportes-uaem-v1.css?v=2">
   <script src="/socket.io/socket.io.js" defer></script>
-  <script src="/public/panel.js" defer></script>
+  <script src="/public/panel.js?v=2" defer></script>
   <script src="/public/reportes-historial-v1.js?v=1" defer></script>
 </head>
 <body data-initial-section="<%= seccion || 'resumen' %>">
@@ -68,7 +68,7 @@
         <button class="icon-button hamburger" id="openSidebar" type="button" aria-label="Abrir menú lateral"><svg class="ico"><use href="#i-menu"/></svg></button>
       </header>
       <main class="content">
-        <% if (resultado) { %><div class="flash" data-flash="<%= resultado %>" role="status"></div><% } %>
+        <% if (resultado) { %><div class="flash" data-flash="<%= resultado %>" role="status"><%= mensajeResultado %></div><% } %>
 
         <section class="view" id="view-resumen" data-view="resumen">
           <div class="page-intro"><div><div class="eyebrow">PAPELERÍA UNIVERSITARIA</div><h1>Bienvenida a la papelería <span class="wave">✦</span></h1><p>Control de productos, pedidos e impresiones desde un solo lugar.</p><span class="uaem-identity">Centro Universitario UAEM Valle de Chalco</span></div><button class="btn btn-primary" type="button" data-go="inventario"><svg class="ico"><use href="#i-box"/></svg> Administrar inventario</button></div>
