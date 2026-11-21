@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#075338">
   <title>Papelería Universitaria · CU UAEM Valle de Chalco | WebAlma</title>
   <link rel="stylesheet" href="/public/panel.css">
-  <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=2">
+  <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=3">
   <link rel="stylesheet" href="/public/reportes-uaem-v1.css?v=2">
   <script src="/socket.io/socket.io.js" defer></script>
   <script src="/public/panel.js?v=3" defer></script>
@@ -313,11 +313,74 @@
 
         <section class="view" id="view-configuracion" data-view="configuracion" hidden>
           <div class="page-intro"><div><div class="eyebrow">CONFIGURACIÓN DE LA PAPELERÍA</div><h1>Configuración</h1><p>Datos operativos y valores que deben validarse con la papelería.</p></div></div>
-          <div class="two-column settings-layout"><article class="section-card pad-card"><div class="panel-head"><div><h2>Datos de la papelería</h2><p>Los cambios se guardan en PostgreSQL y son compartidos con Telegram.</p></div></div>
+          <div class="two-column settings-layout"><article class="section-card pad-card"><div class="panel-head"><div><h2>Datos de la papelería</h2><p>El horario, los avisos y las tarifas se consultan desde Telegram al abrir el menú.</p></div></div>
           <% if (usuario.rol === 'administradora') { %>
-          <form method="post" action="/configuracion/guardar" class="stack-form"><input type="hidden" name="_csrf" value="<%= csrf %>"><div class="form-field"><label for="openingHours">Horario comunicado al público</label><input id="openingHours" name="horario" maxlength="100" value="<%= config.horario %>"></div><div class="form-field"><label for="announcement">Aviso especial de apertura o cierre</label><textarea name="aviso" id="announcement" rows="3" maxlength="350" placeholder="Ej.: El lunes abriremos a las 8:30 a. m."><%= config.aviso %></textarea></div><div class="form-row"><div class="form-field"><label for="priceBlack">Precio B/N</label><input type="number" min="0" step="0.01" id="priceBlack" name="precioBN" value="<%= config.precioBN %>" required></div><div class="form-field"><label for="priceColor">Precio color</label><input type="number" min="0" step="0.01" id="priceColor" name="precioColor" value="<%= config.precioColor %>" required></div></div><div class="form-field"><label for="lowThreshold">Mínimo general de existencias</label><input type="number" min="0" step="1" id="lowThreshold" name="stockMinimo" value="<%= config.stockMinimo %>" required></div><label class="checkbox-line"><input type="checkbox" name="preciosValidados" value="si" <%= config.preciosValidados ? 'checked' : '' %>> Estos precios fueron confirmados por la propietaria</label><button class="btn btn-primary full" type="submit">Guardar configuración</button></form>
+          <form method="post" action="/configuracion/guardar" class="stack-form"><input type="hidden" name="_csrf" value="<%= csrf %>"><div class="form-field"><label for="openingHours">Horario que verá el estudiante en Telegram</label><input id="openingHours" name="horario" maxlength="100" value="<%= config.horario %>"></div><div class="form-field"><label for="announcement">Aviso especial de apertura o cierre</label><textarea name="aviso" id="announcement" rows="3" maxlength="350" placeholder="Ej.: El lunes abriremos a las 8:30 a. m."><%= config.aviso %></textarea></div><div class="form-row"><div class="form-field"><label for="priceBlack">Precio B/N</label><input type="number" min="0" step="0.01" id="priceBlack" name="precioBN" value="<%= config.precioBN %>" required></div><div class="form-field"><label for="priceColor">Precio color</label><input type="number" min="0" step="0.01" id="priceColor" name="precioColor" value="<%= config.precioColor %>" required></div></div><div class="form-field"><label for="lowThreshold">Mínimo general de existencias</label><input type="number" min="0" step="1" id="lowThreshold" name="stockMinimo" value="<%= config.stockMinimo %>" required></div><label class="checkbox-line"><input type="checkbox" name="preciosValidados" value="si" <%= config.preciosValidados ? 'checked' : '' %>> Estos precios fueron confirmados por la propietaria</label><button class="btn btn-primary full" type="submit">Guardar configuración</button></form>
           <% } else { %><p class="hint">Solo la propietaria puede modificar los precios y la configuración del negocio.</p><dl class="readonly-values"><dt>Horario</dt><dd><%= config.horario %></dd><dt>Aviso</dt><dd><%= config.aviso || 'Ninguno' %></dd></dl><% } %></article>
-          <article class="section-card pad-card"><div class="panel-head"><div><h2>Acerca del sistema WebAlma</h2><p>Alcance actual y tareas pendientes</p></div></div><div class="feature-status"><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Inventario conectado al bot de Telegram</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Pedidos instantáneos con Socket.io</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Registro de entradas y salidas PEPS</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Verificar existencias y precios físicos</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Recepción de archivos por Telegram y pagos verificados</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Sincronizar los precios y avisos de configuración con el bot</span></div></div><p class="hint">La auxiliar puede registrar impresiones y entregas; solo la propietaria puede agregar productos, cambiar precios o modificar existencias.</p></article></div>
+          <% if (usuario.rol === 'administradora') { %>
+          <article class="section-card pad-card staff-management">
+            <div class="panel-head"><div><h2>Usuarios y contraseñas</h2><p>Gestiona las cuentas del personal de la papelería. Las contraseñas nunca se muestran.</p></div><span class="round-icon" aria-hidden="true">🔐</span></div>
+            <div class="staff-new"><div class="staff-section-title">Crear nueva cuenta</div>
+              <form action="/configuracion/usuarios/crear" method="post" class="stack-form staff-create-form" autocomplete="off">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <div class="form-row">
+                  <div class="form-field"><label for="newStaffName">Nombre del personal</label><input id="newStaffName" name="nombre" maxlength="100" minlength="2" required placeholder="Ej.: Personal de mostrador" autocomplete="off"></div>
+                  <div class="form-field"><label for="newStaffUser">Nombre de usuario</label><input id="newStaffUser" name="usuario" maxlength="32" minlength="3" pattern="[a-zA-Z][a-zA-Z0-9._-]{2,31}" required placeholder="Ej.: auxiliar2" autocomplete="off"></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-field"><label for="newStaffRole">Permisos</label><select id="newStaffRole" name="rol" required><option value="auxiliar" selected>Auxiliar</option><option value="administradora">Administradora</option></select></div>
+                  <div class="form-field"><label for="newStaffPass">Contraseña inicial</label><input id="newStaffPass" name="password" type="password" minlength="12" maxlength="128" required placeholder="Al menos 12 caracteres" autocomplete="new-password"></div>
+                </div>
+                <p class="hint">Las cuentas nuevas inician con su contraseña temporal. Compártela por un canal privado y pide que la cambien.</p>
+                <button type="submit" class="btn btn-primary full">+ Crear cuenta del personal</button>
+              </form>
+            </div>
+            <div class="staff-section-title staff-existing-title">Cuentas registradas</div>
+            <div class="staff-users">
+              <% usuariosPersonal.forEach(cuenta => { %>
+              <div class="staff-account <%= cuenta.activo ? '' : 'is-inactive' %>">
+                <div class="staff-account-main">
+                  <span class="staff-account-avatar" aria-hidden="true"><%= cuenta.nombre.slice(0,1).toUpperCase() %></span>
+                  <div class="staff-account-identity"><strong><%= cuenta.nombre %></strong><small>@<%= cuenta.usuario %></small></div>
+                  <span class="staff-account-status <%= cuenta.activo ? 'active' : 'disabled' %>"><%= cuenta.activo ? (cuenta.rol === 'administradora' ? 'Administradora' : 'Auxiliar') : 'Inactiva' %></span>
+                </div>
+                <% if (cuenta.activo) { %>
+                <details class="staff-edit"><summary>Editar usuario o contraseña</summary>
+                  <div class="staff-edit-body">
+                    <form method="post" action="/configuracion/usuarios/<%= cuenta.id %>/actualizar" class="stack-form">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <div class="form-field"><label for="staffName<%= cuenta.id %>">Nombre</label><input id="staffName<%= cuenta.id %>" name="nombre" minlength="2" maxlength="100" required value="<%= cuenta.nombre %>"></div>
+                      <div class="form-field"><label for="staffUser<%= cuenta.id %>">Usuario</label><input id="staffUser<%= cuenta.id %>" name="usuario" maxlength="32" minlength="3" required pattern="[a-zA-Z][a-zA-Z0-9._-]{2,31}" value="<%= cuenta.usuario %>" autocomplete="off"></div>
+                      <% if (Number(cuenta.id) === Number(usuario.id)) { %>
+                        <input type="hidden" name="rol" value="administradora">
+                        <p class="staff-self-note">Tu cuenta conserva el permiso de administradora.</p>
+                      <% } else { %>
+                      <div class="form-field"><label for="staffRole<%= cuenta.id %>">Permisos</label><select id="staffRole<%= cuenta.id %>" name="rol" required><option value="auxiliar" <%= cuenta.rol === 'auxiliar' ? 'selected' : '' %>>Auxiliar</option><option value="administradora" <%= cuenta.rol === 'administradora' ? 'selected' : '' %>>Administradora</option></select></div>
+                      <% } %>
+                      <div class="form-field"><label for="staffPass<%= cuenta.id %>">Nueva contraseña (opcional)</label><input id="staffPass<%= cuenta.id %>" name="password" type="password" minlength="12" maxlength="128" placeholder="Dejar vacío para conservarla" autocomplete="new-password"></div>
+                      <% if (Number(cuenta.id) === Number(usuario.id)) { %>
+                      <div class="form-field"><label for="staffCurrent<%= cuenta.id %>">Contraseña actual (para cambiar tu usuario o contraseña)</label><input id="staffCurrent<%= cuenta.id %>" name="claveActual" type="password" autocomplete="current-password"></div>
+                      <% } %>
+                      <p class="hint">Al guardar, la cuenta modificada deberá iniciar sesión nuevamente.</p>
+                      <button type="submit" class="btn btn-primary">Guardar cambios de acceso</button>
+                    </form>
+                    <% if (Number(cuenta.id) !== Number(usuario.id)) { %>
+                    <form method="post" action="/configuracion/usuarios/<%= cuenta.id %>/desactivar" data-confirm="¿Desactivar el acceso de <%= cuenta.nombre %>? Se cerrarán sus sesiones y ya no podrá ingresar. Se conservarán sus registros históricos." class="staff-disable-form">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button type="submit" class="btn btn-reject">Desactivar cuenta</button>
+                    </form>
+                    <% } %>
+                  </div>
+                </details>
+                <% } %>
+              </div>
+              <% }) %>
+            </div>
+            <p class="staff-security-note">Por seguridad, eliminar un usuario significa desactivar su acceso, sin borrar sus registros históricos.</p>
+          </article>
+          <% } else { %>
+          <article class="section-card pad-card"><div class="panel-head"><div><h2>Acerca del sistema WebAlma</h2><p>Alcance actual y tareas pendientes</p></div></div><div class="feature-status"><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Inventario conectado al bot de Telegram</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Pedidos instantáneos con Socket.io</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Registro de entradas y salidas PEPS</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Verificar existencias y precios físicos</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Recepción de archivos por Telegram y pagos verificados</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Sincronizar los precios y avisos de configuración con el bot</span></div></div><p class="hint">La auxiliar puede registrar impresiones y entregas; solo la propietaria puede agregar productos, cambiar precios o modificar existencias.</p></article>
+          <% } %></div>
         </section>
       </main>
     </div>
