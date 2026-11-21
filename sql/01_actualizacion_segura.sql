@@ -21,8 +21,13 @@ CREATE TABLE IF NOT EXISTS public.configuracion (
     precio_color NUMERIC(10,2) NOT NULL DEFAULT 5 CHECK (precio_color >= 0),
     horario VARCHAR(100) NOT NULL DEFAULT '07:00 a 19:00 (pendiente de validar)',
     aviso VARCHAR(350) NOT NULL DEFAULT '',
-    precios_validados BOOLEAN NOT NULL DEFAULT FALSE
+    precios_validados BOOLEAN NOT NULL DEFAULT FALSE,
+    aviso_hasta TIMESTAMPTZ,
+    horario_aviso_hasta TIMESTAMPTZ
 );
+ALTER TABLE public.configuracion
+    ADD COLUMN IF NOT EXISTS aviso_hasta TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS horario_aviso_hasta TIMESTAMPTZ;
 INSERT INTO public.configuracion(id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS public.web_sessions (
