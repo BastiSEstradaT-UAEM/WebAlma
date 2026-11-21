@@ -141,7 +141,7 @@
     if(form&&!window.confirm(form.dataset.confirm))event.preventDefault();
   });
   const addOrder = pedido => {
-    if(!ordersList||!pedido||!Array.isArray(pedido.articulos)||!/^\\d+$/.test(String(pedido.id)))return;
+    if(!ordersList||!pedido||!Array.isArray(pedido.articulos)||!/^\d+$/.test(String(pedido.id)))return;
     if($$('[data-order-id]').some(el=>el.dataset.orderId===String(pedido.id)))return;
     $('#ordersEmpty')?.remove();
     const card=make('article','order-card');card.dataset.orderId=String(pedido.id);
