@@ -7,9 +7,10 @@
   <title>Papelería Universitaria · CU UAEM Valle de Chalco | WebAlma</title>
   <link rel="stylesheet" href="/public/panel.css">
   <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=1">
-  <link rel="stylesheet" href="/public/reportes-uaem-v1.css?v=1">
+  <link rel="stylesheet" href="/public/reportes-uaem-v1.css?v=2">
   <script src="/socket.io/socket.io.js" defer></script>
   <script src="/public/panel.js" defer></script>
+  <script src="/public/reportes-historial-v1.js?v=1" defer></script>
 </head>
 <body data-initial-section="<%= seccion || 'resumen' %>">
   <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -204,10 +205,6 @@
               <small>Cotizaciones históricas · no pagos recibidos</small>
             </article>
           </div>
-          <p class="report-disclaimer"><svg class="ico"><use href="#i-alert"/></svg>
-            Los pedidos registrados pueden incluir pruebas del desarrollo. No hay una marca que permita distinguir todas las pruebas de los pedidos reales. Las cotizaciones NO son ventas cobradas ni ingresos confirmados.
-          </p>
-
           <div class="report-visual-grid">
             <article class="section-card report-visual-card">
               <div class="panel-head"><div>
@@ -248,38 +245,41 @@
           </div>
 
           <article class="section-card report-history">
-            <div class="panel-head">
-              <div><h2>Historial de pedidos y pruebas</h2><p>Hasta 150 registros recientes; se conservan incluso después de atenderlos.</p></div>
-              <span class="badge badge-green" id="reportVisibleCount"><%= reporteActividad.recent.length %> visibles</span>
-            </div>
-            <div class="report-history-filters">
-              <div class="form-field"><label for="reportDateFilter">Filtrar por fecha</label><input id="reportDateFilter" type="date" max="<%= reporteActividad.today %>"></div>
-              <div class="form-field"><label for="reportStatusFilter">Estado del pedido</label>
-                <select id="reportStatusFilter">
+            <div class="panel-head"><div>
+              <h2>Historial de pedidos</h2>
+              <p>Consulta solicitudes registradas en la papelería según la fecha o el estado que necesites.</p>
+            </div></div>
+            <form id="reportHistoryFilter" class="report-history-filters" autocomplete="off">
+              <div class="form-field">
+                <label for="reportDateFilter">Filtrar por fecha</label>
+                <input id="reportDateFilter" name="fecha" type="date" max="<%= reporteActividad.today %>">
+              </div>
+              <div class="form-field">
+                <label for="reportStatusFilter">Estado del pedido</label>
+                <select id="reportStatusFilter" name="estado">
                   <option value="">Todos los estados</option>
                   <% reporteActividad.states.forEach(s=>{ %><option value="<%= s.key %>"><%= s.label %></option><% }) %>
                 </select>
               </div>
-              <button id="reportToday" type="button" class="btn btn-primary">Ver pruebas de hoy</button>
-              <button id="reportClear" type="button" class="btn btn-quiet">Ver todos</button>
+              <button id="reportView" type="submit" class="btn btn-primary">Ver</button>
+            </form>
+            <p id="reportHistoryHint" class="report-history-hint" role="status" aria-live="polite">Selecciona una fecha o un estado y presiona «Ver» para consultar los pedidos.</p>
+            <div id="reportHistoryResults" class="report-history-results" hidden>
+              <div class="report-history-summary" aria-live="polite">
+                <strong id="reportVisibleCount">0 pedidos</strong>
+                <small id="reportHistoryPageNote"></small>
+              </div>
+              <div class="table-scroll" id="reportHistoryTableWrap" hidden>
+                <table class="data-table report-history-table">
+                  <thead><tr><th>Folio</th><th>Fecha y hora (México)</th><th>Estado</th><th>Artículos</th><th>PDF</th><th>Importe cotizado</th></tr></thead>
+                  <tbody id="reportHistoryBody"></tbody>
+                </table>
+              </div>
+              <div class="report-history-no-results" id="reportNoMatches" hidden>
+                No se encontraron pedidos con los filtros seleccionados.
+              </div>
+              <p class="report-history-foot">Consulta de pedidos registrados en PostgreSQL · Horario del centro de México</p>
             </div>
-            <div class="table-scroll">
-              <table class="data-table report-history-table">
-                <thead><tr><th>Folio</th><th>Fecha y hora (México)</th><th>Estado</th><th>Artículos</th><th>PDF</th><th>Importe cotizado</th></tr></thead>
-                <tbody id="reportHistoryBody">
-                  <% reporteActividad.recent.forEach(p=>{ %>
-                    <tr data-report-date="<%= p.date %>" data-report-status="<%= p.estado %>">
-                      <td class="cell-id">#<%= p.id %></td>
-                      <td><%= p.date %> · <%= p.time %></td>
-                      <td><span class="report-status-badge report-status-<%= p.statusClass %>"><%= p.statusLabel %></span></td>
-                      <td><%= p.items %></td><td><%= p.pdf %></td><td class="price-cell"><%= fmx(p.total) %></td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-              <div class="empty-state compact" id="reportNoMatches" hidden><strong>Sin registros con estos filtros</strong><p>Cambia la fecha o el estado para consultar otras solicitudes.</p></div>
-            </div>
-            <div class="table-footer"><span>Las fechas se muestran en horario del centro de México.</span><span>Por privacidad, no se muestran nombres ni cuentas de estudiantes.</span></div>
           </article>
 
           <div class="report-section-divider"><span>Servicios de impresión registrados en mostrador</span></div>
