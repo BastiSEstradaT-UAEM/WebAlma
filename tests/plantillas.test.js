@@ -18,6 +18,12 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('Libreta de prueba'));
   assert(html.includes('Corte mensual'));
   assert(html.includes('Conectado a PostgreSQL'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=1'));
+  assert(html.includes('PAPELERÍA UNIVERSITARIA'));
+  assert(html.includes('Papelería UAEM · Valle de Chalco'));
+  assert(html.includes('Centro Universitario UAEM Valle de Chalco'));
+  assert(html.includes('escudo-uaem.webp'));
+  assert(html.includes('WebAlma'));
   assert(html.includes('reportes/mensual.csv'));
   if(role==='auxiliar')assert(!html.includes('id="newProductBtn"'));
 }
@@ -62,4 +68,14 @@ for(const asset of ['cuxi-papeleria.webp','escudo-uaem.webp']) {
   assert(fs.existsSync(filepath),`Falta recurso visual: ${asset}`);
   assert(fs.statSync(filepath).size>1000,`Imagen vacía o dañada: ${asset}`);
 }
+
+// Comprobaciones de identidad visual de la papelería (sin tocar la lógica).
+const uaemPanelCss=fs.readFileSync(path.join(BASE,'public/panel-uaem-v1.css'),'utf8');
+assert(uaemPanelCss.includes('.sidebar'));
+assert(uaemPanelCss.includes('#075338'));
+assert(uaemPanelCss.includes('.nav-item.active'));
+assert(uaemPanelCss.includes('.btn-primary'));
+assert(uaemPanelCss.includes('.modal'));
+assert(uaemPanelCss.includes('.data-table'));
+assert(fs.statSync(path.join(BASE,'public/escudo-uaem.webp')).size>1000);
 console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
