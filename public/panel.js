@@ -31,7 +31,7 @@
   if (today) today.textContent = new Intl.DateTimeFormat('es-MX',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Mexico_City'}).format(new Date());
 
   const flash = $('[data-flash]');
-  const messages = {producto_agregado:'Producto agregado al catálogo.',producto_actualizado:'Producto actualizado correctamente.',movimiento_registrado:'Movimiento de inventario registrado.',impresion_registrada:'Servicio de impresión registrado.',pedido_entregado:'Pedido marcado como entregado.',configuracion_guardada:'Configuración guardada.',datos_invalidos:'Revisa los datos del formulario.',movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',pedido_no_encontrado:'El pedido ya no está pendiente.'};
+  const messages = {producto_agregado:'Producto agregado al catálogo.',producto_actualizado:'Producto actualizado correctamente.',movimiento_registrado:'Movimiento de inventario registrado.',impresion_registrada:'Servicio de impresión registrado.',pedido_entregado:'Pedido marcado como entregado.',pedido_aceptado:'Pedido aceptado. Se notificó al estudiante por Telegram.',pedido_rechazado:'Pedido rechazado. Se notificó al estudiante por Telegram.',pedido_aceptado_sin_aviso:'Pedido aceptado, pero Telegram no pudo entregar el aviso.',pedido_rechazado_sin_aviso:'Pedido rechazado, pero Telegram no pudo entregar el aviso.',pedido_entregado_sin_aviso:'Pedido entregado; no se pudo enviar aviso por Telegram.',pedido_aceptado_sin_destinatario:'Pedido aceptado; no hay cuenta de Telegram asociada.',pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',configuracion_guardada:'Configuración guardada.',datos_invalidos:'Revisa los datos del formulario.',movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',pedido_no_encontrado:'El pedido ya no está pendiente.'};
   if (flash) flash.textContent = messages[flash.dataset.flash] || 'Operación terminada.';
 
   const filterInventory = () => {
@@ -98,35 +98,88 @@
   if ($('#printType')) { $('#printType').addEventListener('change',updatePrintEstimate); $('#printQuantity').addEventListener('input',updatePrintEstimate); }
 
   const ordersList = $('#ordersList');
-  const make = (tag,className,text) => { const el = document.createElement(tag); if(className)el.className=className;if(text!==undefined)el.textContent=text;return el; };
-  const addOrder = pedido => {
-    if (!ordersList || !pedido || !Array.isArray(pedido.articulos)) return;
-    $('#ordersEmpty')?.remove();
-    const card = make('article','order-card'); card.dataset.orderId = pedido.id;
-    const head = make('div','order-head');
-    const customer = make('div','order-customer');
-    const avatar = make('div','mini-avatar',(pedido.cliente || 'E').slice(0,1).toUpperCase());
-    const customerBody = make('div');customerBody.append(make('strong','',pedido.cliente || 'Estudiante'),make('small','',pedido.hora || 'Ahora'));
-    customer.append(avatar,customerBody);head.append(customer,make('span','badge badge-orange','Por atender'));
-    const items = make('div','order-items');pedido.articulos.forEach(line=>items.append(make('div','','• '+String(line))));
-    if(Array.isArray(pedido.documentos) && pedido.documentos.length){
-      const docs=make('div','order-items');docs.append(make('strong','','PDF para imprimir:'));
-      pedido.documentos.forEach(doc=>{
-        const line=make('div');const link=make('a','',`📄 ${doc.nombre}`);
-        link.href=`/pedidos/${encodeURIComponent(pedido.id)}/archivos/${encodeURIComponent(doc.id)}/descargar`;
-        line.append(link);docs.append(line);
-      });card.append(docs);
+  const make = (tag,className,text) => { const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el; };
+  const createOrderForm=(id,accion,label,css,confirmText='')=>{
+    const form=make('form');form.method='POST';
+    form.action=accion==='entregar'?'/completar_pedido/'+encodeURIComponent(id):'/pedidos/'+encodeURIComponent(id)+'/'+accion;
+    if(confirmText)form.dataset.confirm=confirmText;
+    const csrf=make('input');csrf.type='hidden';csrf.name='_csrf';csrf.value=window.WEBALMA_PANEL.csrf;
+    const submit=make('button','btn '+css,label);submit.type='submit';form.append(csrf,submit);
+    return form;
+  };
+  const renderOrderActions=(card,id,estado)=>{
+    let actions=card.querySelector('.order-actions');
+    if(!actions){actions=make('div','order-actions');card.querySelector('.order-bottom')?.append(actions);}
+    if(!actions)return;
+    actions.replaceChildren();
+    if(estado==='aceptado'){
+      actions.append(createOrderForm(id,'entregar','✓ Marcar entregado','btn-success'));
+    } else if(estado==='pendiente'){
+      actions.append(
+        createOrderForm(id,'aceptar','✓ Aceptar pedido','btn-success'),
+        createOrderForm(id,'rechazar','✕ Rechazar pedido','btn-reject',`¿Rechazar el pedido #${id}? El estudiante recibirá una notificación.`)
+      );
     }
-    const bottom = make('div','order-bottom');const total = make('div');total.append(make('small','','Total cotizado'),make('strong','',money(pedido.total)));
-    const form = make('form');form.method='POST';form.action=`/completar_pedido/${encodeURIComponent(pedido.id)}`;
-    const csrf = make('input');csrf.type='hidden';csrf.name='_csrf';csrf.value=window.WEBALMA_PANEL.csrf;
-    const submit = make('button','btn btn-success','✓  Marcar entregado');submit.type='submit';form.append(csrf,submit);bottom.append(total,form);
-    card.append(head,items,bottom);ordersList.prepend(card);
-    const n = $$('[data-order-id]').length;
-    $('#ordersCounter').textContent = `${n} pendientes`;
-    $('#navOrderCount').textContent = n;
-    $('#metricPending').textContent = n;
-    toast('Nuevo pedido desde Telegram', `${pedido.cliente || 'Estudiante'} · ${money(pedido.total)}`);
+  };
+  const updateOrderCounts=()=>{
+    const n=$$('[data-order-id]').length;
+    if($('#ordersCounter'))$('#ordersCounter').textContent=`${n} en gestión`;
+    if($('#navOrderCount'))$('#navOrderCount').textContent=n;
+    if($('#metricPending'))$('#metricPending').textContent=n;
+    if(!ordersList)return;
+    if(n){
+      $('#ordersEmpty')?.remove();
+    }else if(!$('#ordersEmpty')){
+      const empty=make('div','empty-state');empty.id='ordersEmpty';
+      const title=make('strong','','No hay pedidos por atender');
+      const detail=make('p','','Cuando alguien confirme desde Telegram, aparecerá aquí.');
+      empty.append(title,detail);ordersList.append(empty);
+    }
+  };
+  document.addEventListener('submit',event=>{
+    const form=event.target.closest('form[data-confirm]');
+    if(form&&!window.confirm(form.dataset.confirm))event.preventDefault();
+  });
+  const addOrder = pedido => {
+    if(!ordersList||!pedido||!Array.isArray(pedido.articulos)||!/^\\d+$/.test(String(pedido.id)))return;
+    if($$('[data-order-id]').some(el=>el.dataset.orderId===String(pedido.id)))return;
+    $('#ordersEmpty')?.remove();
+    const card=make('article','order-card');card.dataset.orderId=String(pedido.id);
+    const head=make('div','order-head');const customer=make('div','order-customer');
+    const avatar=make('div','mini-avatar',(pedido.cliente||'E').slice(0,1).toUpperCase());
+    const customerBody=make('div');
+    customerBody.append(make('strong','',pedido.cliente||'Estudiante'),make('small','',(pedido.hora||'Ahora')+' · Folio '+pedido.id));
+    customer.append(avatar,customerBody);
+    const badge=make('span','badge badge-orange order-state-badge','Por aceptar');
+    head.append(customer,badge);
+    const items=make('div','order-items');pedido.articulos.forEach(line=>items.append(make('div','','• '+String(line))));
+    card.append(head,items);
+    if(Array.isArray(pedido.documentos)&&pedido.documentos.length){
+      const docs=make('div','order-items order-documents');docs.append(make('strong','','Documentos enviados por Telegram:'));
+      pedido.documentos.forEach(doc=>{
+        const line=make('div'),link=make('a','','📄 '+doc.nombre);
+        link.href='/pedidos/'+encodeURIComponent(pedido.id)+'/archivos/'+encodeURIComponent(doc.id)+'/descargar';
+        line.append(link);docs.append(line);
+      });
+      card.append(docs);
+    }
+    const bottom=make('div','order-bottom');const total=make('div');
+    total.append(make('small','','Total cotizado'),make('strong','',money(pedido.total)));bottom.append(total);
+    card.append(bottom);renderOrderActions(card,String(pedido.id),'pendiente');
+    ordersList.prepend(card);updateOrderCounts();
+    toast('Nuevo pedido desde Telegram',`${pedido.cliente||'Estudiante'} · ${money(pedido.total)}`);
+  };
+  const updateOrderState=data=>{
+    const card=$$('[data-order-id]').find(el=>el.dataset.orderId===String(data?.id));
+    if(!card)return;
+    if(data.estado==='aceptado'){
+      const badge=card.querySelector('.order-state-badge');
+      if(badge){badge.textContent='Aceptado';badge.classList.remove('badge-orange');badge.classList.add('badge-green');}
+      renderOrderActions(card,String(data.id),'aceptado');
+    }else if(['rechazado','entregado'].includes(data.estado)){
+      card.remove();
+    }
+    updateOrderCounts();
   };
   const socketStatus = $('#socketStatus');
   if (window.io) {
@@ -139,13 +192,7 @@
     socket.on('inventario_actualizado',refreshSharedData);
     socket.on('impresion_actualizada',refreshSharedData);
     socket.on('configuracion_actualizada',refreshSharedData);
-    socket.on('pedido_completado',data=>{
-      const item = $$('[data-order-id]').find(el => el.dataset.orderId === data.id);
-      item?.remove();
-      const n = $$('[data-order-id]').length;
-      $('#ordersCounter').textContent = `${n} pendientes`;
-      $('#navOrderCount').textContent = n;
-      $('#metricPending').textContent = n;
-    });
+    socket.on('pedido_estado_actualizado',updateOrderState);
+    socket.on('pedido_completado',data=>updateOrderState({id:data.id,estado:'entregado'}));
   } else if(socketStatus)socketStatus.textContent='Sin conexión';
 })();
