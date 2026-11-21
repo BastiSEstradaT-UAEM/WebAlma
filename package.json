@@ -7,7 +7,7 @@
   "main": "servidor_web.js",
   "scripts": {
     "start": "node servidor_web.js",
-    "check": "node --check servidor_web.js && node --check bot.js && node --check db.js && node --check public/panel.js && node tests/plantillas.test.js && node --check pdf_cotizador.js && node tests/pdf_cotizador.test.js && node tests/flujo_bot.test.js && node tests/estados_pedidos.test.js"
+    "check": "node --check servidor_web.js && node --check bot.js && node --check db.js && node --check public/panel.js && node tests/plantillas.test.js && node --check pdf_cotizador.js && node tests/pdf_cotizador.test.js && node tests/flujo_bot.test.js && node tests/estados_pedidos.test.js && node --check migracion_estados.js && node tests/migracion_pedidos.test.js"
   },
   "engines": {
     "node": ">=20"
