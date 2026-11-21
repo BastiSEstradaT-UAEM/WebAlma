@@ -243,7 +243,7 @@ app.post('/impresiones/registrar',auth,csrf,async(req,res)=>{
   io.emit('impresion_actualizada');go(res,'impresion_registrada','impresiones');
 });
 // Historial bajo demanda: consulta de sólo lectura con filtros obligatorios.
-app.get('/reportes/historial',authadmin,async(req,res,next)=>{
+app.get('/reportes/historial',auth,admin,async(req,res,next)=>{
   res.set('Cache-Control','private, no-store');
   const fecha=typeof req.query.fecha==='string'?req.query.fecha.trim():'';
   const estado=typeof req.query.estado==='string'?req.query.estado.trim():'';
@@ -263,11 +263,11 @@ app.get('/reportes/historial',authadmin,async(req,res,next)=>{
   }catch(e){return next(e);}
 });
 
-app.get('/reportes/semanal.csv',authadmin,async(req,res)=>{
+app.get('/reportes/semanal.csv',auth,admin,async(req,res)=>{
   const bounds=weekBounds();const data=report(await db.getImpressions(),bounds);
   res.type('text/csv; charset=utf-8').set('Content-Disposition',`attachment; filename="reporte_impresiones_${bounds.start}.csv"`).send(csvReport(data));
 });
-app.get('/reportes/mensual.csv',authadmin,async(req,res)=>{
+app.get('/reportes/mensual.csv',auth,admin,async(req,res)=>{
   const mes=String(req.query.mes||todayMX().slice(0,7));
   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes))return res.status(400).send('Mes inválido');
   const end=new Date(Date.UTC(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0)).toISOString().slice(0,10);
