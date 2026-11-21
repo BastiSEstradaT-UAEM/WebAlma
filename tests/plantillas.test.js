@@ -59,7 +59,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="openSidebar"'));
   assert(html.includes('id="closeSidebar"'));
   assert(html.includes('class="sidebar"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=1'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=2'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -71,6 +71,11 @@ for(const role of ['administradora','auxiliar']) {
   if(role==='administradora') {
     assert(html.includes('id="archiveProductForm"'));
     assert(html.includes('id="archiveProductBtn"'));
+    assert(html.includes('class="archive-product-info"'));
+    assert(html.includes('class="archive-product-copy"'));
+    assert(html.includes('class="btn btn-reject archive-product-action"'));
+    assert(html.includes('href="#i-trash"'));
+
     assert(html.includes('Eliminar del catálogo'));
     assert(html.includes('data-confirm="¿Retirar este artículo del catálogo?'));
     assert(html.includes('id="archiveProductForm" class="archive-product-form" method="post"'));
@@ -115,6 +120,11 @@ assert(serverSource.includes("io.emit('inventario_actualizado')"));
 assert(serverSource.includes("producto_archivado:'Producto retirado del catálogo. Su historial se conserva.'"));
 
 const institutionalCss=fs.readFileSync(path.join(BASE,'public/panel-uaem-v1.css'),'utf8');
+assert(institutionalCss.includes('#initialStockField[hidden]{display:none!important}'));
+assert(institutionalCss.includes('.archive-product-form[hidden]{display:none!important}'));
+assert(institutionalCss.includes('.archive-product-copy p{'));
+assert(institutionalCss.includes('@media(max-width:600px)'));
+
 assert(institutionalCss.includes('.mobile-menu-bar{display:none}'));
 assert(institutionalCss.includes('.mobile-menu-bar .hamburger'));
 const pedidoEjemplo={id:'55',cliente:'Estudiante de prueba',total:12,hora:'12:00',articulos:['PDF Tarea.pdf'],documentos:[{id:'9',nombre:'Tarea.pdf'}]};
