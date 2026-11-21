@@ -74,7 +74,7 @@ for(const role of ['administradora','auxiliar']) {
 const template=fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8');
 for (const role of ['administradora','auxiliar']) {
   const confirmHtml=ejs.render(template,{
-    ...data,usuario:{id:1,nombre:'Prueba',rol},
+    ...data,usuario:{id:1,nombre:'Prueba',rol:role},
     seccion:'configuracion',resultado:'configuracion_guardada',
     mensajeResultado:'Configuración guardada correctamente.'
   },{filename:path.join(BASE,'views/gestor.ejs')});
