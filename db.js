@@ -60,6 +60,35 @@ async function getOrders() {
     fecha:r.fecha, hora:new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit'}).format(r.fecha),
     articulos:r.articulos,documentos:r.documentos||[],estado:r.estado}));
 }
+/**
+ * Lecturas de sólo consulta para reportes: pedidos históricos (también entregados
+ * y rechazados), actividad semanal en zona horaria de México y PDF vinculados.
+ * Sin datos privados de estudiantes en la presentación de reportes.
+ */
+async function getReportActivity(bounds,today){
+  const {buildReportActivity}=require('./reportes_actividad');
+  const [summary,daily,recent,pdf]=await Promise.all([
+    query(`SELECT estado, COUNT(*)::integer AS cantidad,
+      COALESCE(SUM(total),0) AS cotizado
+      FROM public.pedidos GROUP BY estado`),
+    query(`SELECT to_char(fecha AT TIME ZONE 'America/Mexico_City','YYYY-MM-DD') AS dia,
+      estado,COUNT(*)::integer AS cantidad,COALESCE(SUM(total),0) AS cotizado
+      FROM public.pedidos
+      WHERE (fecha AT TIME ZONE 'America/Mexico_City')::date BETWEEN $1::date AND $2::date
+      GROUP BY 1,2 ORDER BY 1,2`,[bounds.start,bounds.end]),
+    query(`SELECT p.id, to_char(p.fecha AT TIME ZONE 'America/Mexico_City','YYYY-MM-DD') AS dia,
+      to_char(p.fecha AT TIME ZONE 'America/Mexico_City','HH24:MI') AS hora,
+      p.estado,p.total,
+      (SELECT COUNT(*)::integer FROM public.detalle_pedido d WHERE d.pedido_id=p.id) AS articulos,
+      (SELECT COUNT(*)::integer FROM public.documentos_impresion f WHERE f.pedido_id=p.id) AS pdf
+      FROM public.pedidos p ORDER BY p.fecha DESC,p.id DESC LIMIT 150`),
+    query(`SELECT COUNT(*)::integer AS total_pdf,
+      COUNT(DISTINCT pedido_id)::integer AS pedidos_pdf
+      FROM public.documentos_impresion`)
+  ]);
+  return buildReportActivity(summary.rows,daily.rows,recent.rows,pdf.rows[0],bounds,today);
+}
+
 async function getImpressions() {
   const {rows}=await query(`SELECT id,fecha,tipo,cantidad,precio_unitario,total,observacion
     FROM public.impresiones ORDER BY fecha, id`);
@@ -213,5 +242,5 @@ const telegramStore={
   ON CONFLICT(clave) DO UPDATE SET datos=$2,actualizado=NOW()`,[key,JSON.stringify(value)]);},
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
-module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,
+module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,getReportActivity,
   createProduct,editProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
