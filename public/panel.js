@@ -14,7 +14,8 @@
     setTimeout(() => e.remove(), 5500);
   };
   const show = name => {
-    const view = Object.hasOwn(sections, name) ? name : 'resumen';
+    // Solo se puede navegar a secciones realmente renderizadas para el rol actual.
+    const view = Object.hasOwn(sections, name) && $('[data-view]').some(el => el.dataset.view === name) ? name : 'resumen';
     $$('[data-view]').forEach(el => el.hidden = el.dataset.view !== view);
     $$('[data-nav]').forEach(el => { el.classList.toggle('active', el.dataset.nav === view); el.setAttribute('aria-current',el.dataset.nav===view?'page':'false'); });
     $('#sidebar').classList.remove('open');

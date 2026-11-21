@@ -45,7 +45,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="reportView" type="submit" class="btn btn-primary">Ver</button>'));
   assert(html.includes('/public/reportes-uaem-v1.css?v=2'));
   assert(html.includes('/public/reportes-historial-v1.js?v=1'));
-  assert(html.includes('/public/panel.js?v=3'));
+  assert(html.includes('/public/panel.js?v=4'));
   assert(!html.includes('class="flash"'));
 
   assert(!html.includes('Historial de pedidos y pruebas'));
@@ -73,6 +73,10 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('WebAlma'));
   assert(html.includes('reportes/mensual.csv'));
   if(role==='administradora') {
+  assert(html.includes('data-nav="configuracion"'));
+  assert(html.includes('data-go="configuracion"'));
+  assert(html.includes('id="view-configuracion"'));
+  assert(html.includes('ADMINISTRACIÓN</div>'));
   assert(html.includes('name="horaApertura"'));
   assert(html.includes('name="horaCierre"'));
   assert(html.includes('type="time"'));
@@ -104,6 +108,10 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('id="archiveProductForm" class="archive-product-form" method="post"'));
     assert(html.includes('name="_csrf" value="test-csrf"'));
   } else {
+    assert(!html.includes('data-nav="configuracion"'));
+    assert(!html.includes('data-go="configuracion"'));
+    assert(!html.includes('id="view-configuracion"'));
+    assert(!html.includes('ADMINISTRACIÓN</div>'));
     assert(!html.includes('name="horaApertura"'));
     assert(!html.includes('name="horaCierre"'));
     assert(!html.includes('id="openingHours"'));
@@ -142,6 +150,9 @@ assert(panelScript.includes('archiveForm.hidden = true'));
 assert(panelScript.includes('archiveForm.hidden = false'));
 const dbSource=fs.readFileSync(path.join(BASE,'db.js'),'utf8');
 const serverSource=fs.readFileSync(path.join(BASE,'servidor_web.js'),'utf8');
+assert(serverSource.includes("clean(req.query.seccion,24)==='configuracion'"));
+assert(serverSource.includes("return res.redirect('/gestor?seccion=resumen')"));
+assert(panelScript.includes("$('[data-view]').some(el => el.dataset.view === name)"));
 assert(serverSource.includes('const horario=validarHorario(req.body.horaApertura,req.body.horaCierre)'));
 assert(serverSource.includes("if(!horario)return go(res,'horario_invalido','configuracion')"));
 assert(serverSource.includes("app.post('/configuracion/usuarios/crear',auth,admin,csrf,async(req,res)=>{"));

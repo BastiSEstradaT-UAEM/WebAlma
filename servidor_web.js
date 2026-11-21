@@ -124,6 +124,9 @@ app.post('/login',csrf,async(req,res)=>{
 });
 app.post('/logout',auth,csrf,(req,res)=>req.session.destroy(()=>res.redirect('/')));
 app.get('/gestor',auth,async(req,res)=>{
+  // Ocultar Configuración no basta: bloquear también el acceso por URL a auxiliares.
+  if(req.session.usuario.rol!=='administradora'&&clean(req.query.seccion,24)==='configuracion')
+    return res.redirect('/gestor?seccion=resumen');
   const [inventario,pedidosActivos,impresiones,config,usuariosPersonal]=await Promise.all([db.getInventory(),db.getOrders(),db.getImpressions(),db.getConfig(),req.session.usuario.rol==='administradora'?db.listUsers():Promise.resolve([])]);
   const bounds=weekBounds();const lowStock=inventario.filter(x=>x.stock<=(x.stock_minimo_sugerido??config.stockMinimo));
   const reporteActividad=await db.getReportActivity(bounds,todayMX());
