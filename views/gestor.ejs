@@ -62,9 +62,10 @@
     </aside>
 
     <div class="workspace">
-      <header class="topbar">
-        <div class="topbar-left"><button class="icon-button hamburger" id="openSidebar" type="button" aria-label="Abrir menú"><svg class="ico"><use href="#i-menu"/></svg></button><span class="breadcrumb">Papelería UAEM · Valle de Chalco</span><span class="breadcrumb-sep">/</span><span id="currentViewName">Vista general</span></div>
-        <div class="topbar-right"><span class="live-state"><span class="live-dot"></span> Conectado a PostgreSQL</span><span class="topbar-divider"></span><span class="topbar-date" id="todayDate"></span><div class="top-avatar"><%= usuario.rol === 'administradora' ? 'A' : 'X' %></div></div>
+      <!-- La identidad y la navegación ya se muestran en el lateral.
+           En pantallas pequeñas se conserva únicamente el acceso al menú. -->
+      <header class="mobile-menu-bar" aria-label="Acceso al menú">
+        <button class="icon-button hamburger" id="openSidebar" type="button" aria-label="Abrir menú lateral"><svg class="ico"><use href="#i-menu"/></svg></button>
       </header>
       <main class="content">
         <% if (resultado) { %><div class="flash" data-flash="<%= resultado %>" role="status"></div><% } %>

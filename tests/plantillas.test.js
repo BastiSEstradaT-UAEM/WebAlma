@@ -48,16 +48,32 @@ for(const role of ['administradora','auxiliar']) {
   assert(!html.includes('data-report-date="2026-11-20"'));
   assert(!html.includes('id="reportToday"'));
   assert(!html.includes('id="reportClear"'));
-  assert(html.includes('Conectado a PostgreSQL'));
+  assert(!html.includes('Conectado a PostgreSQL'));
+  assert(!html.includes('class="topbar"'));
+  assert(!html.includes('id="todayDate"'));
+  assert(!html.includes('id="currentViewName"'));
+  assert(html.includes('class="mobile-menu-bar"'));
+  assert(html.includes('id="openSidebar"'));
+  assert(html.includes('id="closeSidebar"'));
+  assert(html.includes('class="sidebar"'));
   assert(html.includes('/public/panel-uaem-v1.css?v=1'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
-  assert(html.includes('Papelería UAEM · Valle de Chalco'));
+  assert(!html.includes('Papelería UAEM · Valle de Chalco'));
+  assert(html.includes('Papelería universitaria'));
+  assert(html.includes('CU UAEM Valle de Chalco'));
   assert(html.includes('Centro Universitario UAEM Valle de Chalco'));
   assert(html.includes('escudo-uaem.webp'));
   assert(html.includes('WebAlma'));
   assert(html.includes('reportes/mensual.csv'));
   if(role==='auxiliar')assert(!html.includes('id="newProductBtn"'));
 }
+const panelScript=fs.readFileSync(path.join(BASE,'public/panel.js'),'utf8');
+assert(!panelScript.includes("$('#currentViewName')"));
+assert(!panelScript.includes("$('#todayDate')"));
+assert(panelScript.includes("$('#openSidebar')"));
+const institutionalCss=fs.readFileSync(path.join(BASE,'public/panel-uaem-v1.css'),'utf8');
+assert(institutionalCss.includes('.mobile-menu-bar{display:none}'));
+assert(institutionalCss.includes('.mobile-menu-bar .hamburger'));
 const pedidoEjemplo={id:'55',cliente:'Estudiante de prueba',total:12,hora:'12:00',articulos:['PDF Tarea.pdf'],documentos:[{id:'9',nombre:'Tarea.pdf'}]};
 const ejemploHTML=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
   {...data,pedidosActivos:[pedidoEjemplo]},{filename:path.join(BASE,'views/gestor.ejs')});
