@@ -1,6 +1,7 @@
 'use strict';
 const fs=require('fs');
 const path=require('path');
+const vm=require('node:vm');
 const assert=require('assert');
 const ejs=require('ejs');
 const BASE=path.resolve(__dirname,'..');
@@ -45,7 +46,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="reportView" type="submit" class="btn btn-primary">Ver</button>'));
   assert(html.includes('/public/reportes-uaem-v1.css?v=2'));
   assert(html.includes('/public/reportes-historial-v1.js?v=1'));
-  assert(html.includes('/public/panel.js?v=4'));
+  assert(html.includes('/public/panel.js?v=5'));
   assert(!html.includes('class="flash"'));
 
   assert(!html.includes('Historial de pedidos y pruebas'));
@@ -235,3 +236,51 @@ assert(reportCss.includes('.report-bars'));
 assert(reportCss.includes('.report-state-chart'));
 assert(reportCss.includes('.report-history-table'));
 console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
+
+// Prueba real de navegación ejecutando panel.js con un DOM mínimo simulado:
+// protege contra errores como llamar .some() sobre querySelector(), que bloqueó todos los menús.
+const navigationSource=fs.readFileSync(path.join(BASE,'public/panel.js'),'utf8');
+function probarNavegacion(rol,primeraSeccion){
+  const nombres=['resumen','inventario','pedidos','impresiones','reportes',...(rol==='administradora'?['configuracion']:[])];
+  const vistas=nombres.map(nombre=>({dataset:{view:nombre},hidden:true}));
+  const botones=nombres.map(nombre=>({
+    dataset:{nav:nombre},
+    classList:{toggle(){},remove(){},add(){}},
+    setAttribute(){},
+    addEventListener(tipo,fn){if(tipo==='click')this.click=fn;}
+  }));
+  const barraLateral={classList:{remove(){},add(){}}};
+  const documento={
+    body:{dataset:{initialSection:primeraSeccion}},
+    querySelector(selector){return selector==='#sidebar'?barraLateral:null;},
+    querySelectorAll(selector){return selector==='[data-view]'?vistas:selector==='[data-nav]'?botones:[];},
+    getElementById(){return null;},
+    addEventListener(){}
+  };
+  let url='';
+  vm.runInNewContext(navigationSource,{
+    document:documento,
+    window:{io:null,scrollTo(){}},
+    history:{replaceState(_a,_b,path){url=path;}},
+    location:{reload(){}},
+    console,
+    setTimeout(){}
+  },{timeout:2000});
+  const inicial=rol==='auxiliar'&&primeraSeccion==='configuracion'?'resumen':primeraSeccion;
+  assert.strictEqual(vistas.find(v=>!v.hidden)?.dataset.view,inicial);
+  for(const nombre of nombres){
+    const boton=botones.find(b=>b.dataset.nav===nombre);
+    assert.strictEqual(typeof boton.click,'function','Clic funcional: '+rol+'/'+nombre);
+    boton.click();
+    assert.strictEqual(vistas.find(v=>!v.hidden)?.dataset.view,nombre,'Vista visible: '+rol+'/'+nombre);
+    assert.strictEqual(url,'/gestor?seccion='+encodeURIComponent(nombre));
+  }
+  if(rol==='auxiliar'){
+    assert(!botones.some(b=>b.dataset.nav==='configuracion'));
+    assert(!vistas.some(v=>v.dataset.view==='configuracion'));
+  }
+}
+probarNavegacion('auxiliar','resumen');
+probarNavegacion('auxiliar','configuracion');
+probarNavegacion('administradora','configuracion');
+console.log('Navegación por rol simulada: módulos del auxiliar y configuración de administradora OK.');
