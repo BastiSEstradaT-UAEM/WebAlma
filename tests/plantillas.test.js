@@ -64,14 +64,6 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="closeSidebar"'));
   assert(html.includes('class="sidebar"'));
   assert(html.includes('/public/panel-uaem-v1.css?v=4'));
-  assert(html.includes('name="horaApertura"'));
-  assert(html.includes('name="horaCierre"'));
-  assert(html.includes('type="time"'));
-  assert(!html.includes('id="openingHours"'));
-  assert(!html.includes('name="horario"'));
-  assert(html.includes('Se aplica todos los días'));
-  assert(!html.includes('El horario anterior no es válido.'));
-  assert(!html.includes('0:600am a 19:00pm'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -81,6 +73,14 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('WebAlma'));
   assert(html.includes('reportes/mensual.csv'));
   if(role==='administradora') {
+  assert(html.includes('name="horaApertura"'));
+  assert(html.includes('name="horaCierre"'));
+  assert(html.includes('type="time"'));
+  assert(!html.includes('id="openingHours"'));
+  assert(!html.includes('name="horario"'));
+  assert(html.includes('Se aplica todos los días'));
+  assert(!html.includes('El horario anterior no es válido.'));
+  assert(!html.includes('0:600am a 19:00pm'));
     assert(html.includes('id="archiveProductForm"'));
     assert(html.includes('id="archiveProductBtn"'));
     assert(html.includes('Usuarios y contraseñas'));
@@ -104,6 +104,9 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('id="archiveProductForm" class="archive-product-form" method="post"'));
     assert(html.includes('name="_csrf" value="test-csrf"'));
   } else {
+    assert(!html.includes('name="horaApertura"'));
+    assert(!html.includes('name="horaCierre"'));
+    assert(!html.includes('id="openingHours"'));
     assert(!html.includes('id="newProductBtn"'));
     assert(!html.includes('action="/configuracion/usuarios/crear"'));
     assert(!html.includes('action="/configuracion/usuarios/2/actualizar"'));
