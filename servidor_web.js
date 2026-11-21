@@ -99,7 +99,9 @@ app.get('/gestor',auth,async(req,res)=>{
     totalUnidades:inventario.reduce((s,p)=>s+p.stock,0),
     valorEstimado:inventario.reduce((s,p)=>s+p.precio*p.stock,0),
     seccion:clean(req.query.seccion,24),resultado:clean(req.query.resultado,80),
-    mensajeResultado:RESULT_MESSAGES[clean(req.query.resultado,80)] || (req.query.resultado?'Operación terminada.':'')});
+    mensajeResultado:Object.hasOwn(RESULT_MESSAGES,clean(req.query.resultado,80))
+      ? RESULT_MESSAGES[clean(req.query.resultado,80)]
+      : (req.query.resultado?'Operación terminada.':'')});
 });
 app.post('/inventario/nuevo',auth,admin,csrf,async(req,res)=>{
   const data={producto:clean(req.body.producto,150),categoria:clean(req.body.categoria,80)||'Otros',
