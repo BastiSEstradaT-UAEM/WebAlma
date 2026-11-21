@@ -51,13 +51,14 @@ async function getConfig() {
 async function getOrders() {
   const { rows } = await query(`SELECT p.id, p.nombre_cliente, p.total, p.fecha,
    COALESCE(array_agg(d.descripcion ORDER BY d.id) FILTER (WHERE d.id IS NOT NULL), ARRAY[]::VARCHAR[]) AS articulos,
+   p.estado,
    COALESCE((SELECT json_agg(json_build_object('id',f.id,'nombre',f.nombre_archivo) ORDER BY f.id)
      FROM public.documentos_impresion f WHERE f.pedido_id=p.id),'[]'::json) AS documentos
    FROM public.pedidos p LEFT JOIN public.detalle_pedido d ON d.pedido_id=p.id
-   WHERE p.estado='pendiente' GROUP BY p.id ORDER BY p.fecha`);
+   WHERE p.estado IN ('pendiente','aceptado') GROUP BY p.id ORDER BY p.fecha`);
   return rows.map(r => ({id:String(r.id),cliente:r.nombre_cliente||'Estudiante',total:num(r.total),
     fecha:r.fecha, hora:new Intl.DateTimeFormat('es-MX',{timeZone:'America/Mexico_City',hour:'2-digit',minute:'2-digit'}).format(r.fecha),
-    articulos:r.articulos,documentos:r.documentos||[],estado:'pendiente'}));
+    articulos:r.articulos,documentos:r.documentos||[],estado:r.estado}));
 }
 async function getImpressions() {
   const {rows}=await query(`SELECT id,fecha,tipo,cantidad,precio_unitario,total,observacion
@@ -149,9 +150,15 @@ async function getOrderDocument(pedidoId,documentoId){
     FROM public.documentos_impresion WHERE id=$1 AND pedido_id=$2`,[documentoId,pedidoId]);
   return rows[0]||null;
 }
+async function transitionOrder(id,fromStatus,toStatus) {
+  // UPDATE atómico: evita aceptar y rechazar simultáneamente el mismo pedido.
+  const {rows}=await query(`UPDATE public.pedidos SET estado=$3
+    WHERE id=$1 AND estado=$2 RETURNING id,telegram_usuario_id`,[id,fromStatus,toStatus]);
+  if(!rows.length)return null;
+  return {id:String(rows[0].id),telegramId:rows[0].telegram_usuario_id ? String(rows[0].telegram_usuario_id) : null};
+}
 async function completeOrder(id) {
-  const r=await query(`UPDATE public.pedidos SET estado='entregado' WHERE id=$1 AND estado='pendiente' RETURNING id`,[id]);
-  return r.rowCount>0;
+  return !!(await transitionOrder(id,'aceptado','entregado'));
 }
 async function registerPrint(tipo,cantidad,precio,observacion,usuarioId=null) {
   return query(`INSERT INTO public.impresiones(usuario_id,tipo,cantidad,precio_unitario,total,observacion)
@@ -207,4 +214,4 @@ const telegramStore={
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
 module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,
-  createProduct,editProduct,moveProduct,createOrder,getOrderDocument,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
+  createProduct,editProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};

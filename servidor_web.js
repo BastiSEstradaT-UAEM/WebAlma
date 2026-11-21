@@ -9,6 +9,7 @@ const {Readable}=require('node:stream');
 const {Server}=require('socket.io');
 const db=require('./db');
 const {createBot}=require('./bot');
+const {procesarEstadoPedido}=require('./pedidos_estado');
 
 for (const name of ['DATABASE_URL','SESSION_SECRET','ADMIN_USER','ADMIN_PASS']) {
   if (!process.env[name]) throw new Error(`Falta ${name} en las variables de entorno.`);
@@ -140,11 +141,28 @@ app.get('/pedidos/:id/archivos/:doc/descargar',auth,async(req,res)=>{
     stream.pipe(res);
   }catch(_e){console.warn('No se pudo descargar PDF desde Telegram.');if(!res.headersSent)res.status(502).send('PDF no disponible; solicita el documento al estudiante.');}
 });
-app.post('/completar_pedido/:id',auth,csrf,async(req,res)=>{
+async function resolverDecisionPedido(req,res,accion){
   if(!/^\d+$/.test(req.params.id))return go(res,'pedido_no_encontrado','pedidos');
-  const ok=await db.completeOrder(Number(req.params.id));if(!ok)return go(res,'pedido_no_encontrado','pedidos');
-  io.emit('pedido_completado',{id:req.params.id});go(res,'pedido_entregado','pedidos');
-});
+  const id=Number(req.params.id);
+  const resultado=await procesarEstadoPedido({
+    id,accion,cambiarEstado:db.transitionOrder,
+    enviarMensaje:(telegramId,mensaje)=>{
+      if(!bot)throw new Error('Telegram no está disponible');
+      return bot.telegram.sendMessage(telegramId,mensaje);
+    }
+  });
+  if(!resultado.ok)return go(res,resultado.motivo==='datos_invalidos'?'datos_invalidos':'pedido_no_encontrado','pedidos');
+  io.emit('pedido_estado_actualizado',{id:String(id),estado:resultado.estado});
+  const sufijo=resultado.notificacion==='fallida'?'_sin_aviso':
+    resultado.notificacion==='sin_destinatario'?'_sin_destinatario':'';
+  return go(res,'pedido_'+resultado.estado+sufijo,'pedidos');
+}
+// En Express 4, enviar los errores asíncronos al manejador central.
+const ejecutarDecision=accion=>(req,res,next)=>resolverDecisionPedido(req,res,accion).catch(next);
+app.post('/pedidos/:id/aceptar',auth,csrf,ejecutarDecision('aceptar'));
+app.post('/pedidos/:id/rechazar',auth,csrf,ejecutarDecision('rechazar'));
+// Conservar la ruta anterior para que enlaces existentes sigan funcionando.
+app.post('/completar_pedido/:id',auth,csrf,ejecutarDecision('entregar'));
 app.post('/impresiones/registrar',auth,csrf,async(req,res)=>{
   const tipo=req.body.tipo,cantidad=nonnegInt(req.body.cantidad),cfg=await db.getConfig();
   if(!['bn','color'].includes(tipo)||!cantidad||cantidad>50000)return go(res,'datos_invalidos','impresiones');

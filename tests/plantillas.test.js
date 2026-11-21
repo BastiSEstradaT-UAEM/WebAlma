@@ -25,6 +25,13 @@ const pedidoEjemplo={id:'55',cliente:'Estudiante de prueba',total:12,hora:'12:00
 const ejemploHTML=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
   {...data,pedidosActivos:[pedidoEjemplo]},{filename:path.join(BASE,'views/gestor.ejs')});
 assert(ejemploHTML.includes('/pedidos/55/archivos/9/descargar'));
+assert(ejemploHTML.includes('/pedidos/55/aceptar'));
+assert(ejemploHTML.includes('/pedidos/55/rechazar'));
+assert(!ejemploHTML.includes('action="/completar_pedido/55"'));
+const aceptadoHTML=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
+  {...data,pedidosActivos:[{...pedidoEjemplo,estado:'aceptado'}]},{filename:path.join(BASE,'views/gestor.ejs')});
+assert(aceptadoHTML.includes('action="/completar_pedido/55"'));
+assert(!aceptadoHTML.includes('action="/pedidos/55/rechazar"'));
 const login=ejs.render(fs.readFileSync(path.join(BASE,'views/login.ejs'),'utf8'),{error:false,csrf:'test'});
 assert(login.includes('login'));
 console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
