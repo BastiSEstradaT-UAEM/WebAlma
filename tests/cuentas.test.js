@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {validarCuenta}=require('../cuentas');
+const base={nombre:' Auxiliar de papelería ',usuario:' Aux2 ',rol:'auxiliar',password:'MiPasswordMuySeguro2026!'};
+const created=validarCuenta(base,{exigirPassword:true});
+assert.equal(created.nombre,'Auxiliar de papelería');
+assert.equal(created.usuario,'aux2');
+assert.equal(created.rol,'auxiliar');
+assert.equal(created.password,base.password);
+assert.equal(validarCuenta({...base,password:''},{exigirPassword:true}).error,'clave_requerida');
+assert.equal(validarCuenta({...base,password:'12345678901'},{exigirPassword:true}).error,'clave_invalida');
+assert.equal(validarCuenta({...base,password:'            '},{exigirPassword:true}).error,'clave_invalida');
+assert.equal(validarCuenta({...base,password:''}).password,'');
+assert.equal(validarCuenta({...base,usuario:'@@@'}).error,'usuario_invalido');
+assert.equal(validarCuenta({...base,rol:'superuser'}).error,'rol_invalido');
+assert.equal(validarCuenta({...base,nombre:'a'}).error,'nombre_invalido');
+assert.equal(validarCuenta({...base,rol:'administradora'}).rol,'administradora');
+console.log('Cuentas: validación de roles, usuarios y contraseñas OK.');
