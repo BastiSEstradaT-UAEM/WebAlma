@@ -167,11 +167,146 @@
         </section>
 
         <section class="view" id="view-reportes" data-view="reportes" hidden>
-          <div class="page-intro"><div><div class="eyebrow">REPORTES DE LA PAPELERÍA</div><h1>Reporte semanal</h1><p>Resumen numérico de los servicios registrados, como se solicitó en la entrevista.</p></div><a class="btn btn-primary" href="/reportes/semanal.csv"><svg class="ico"><use href="#i-file"/></svg> Exportar CSV</a></div>
-          <article class="section-card pad-card" style="margin:14px 0"><div class="panel-head"><div><h2>Corte mensual</h2><p>Descarga los ingresos de impresiones registrados para un mes.</p></div></div><form action="/reportes/mensual.csv" method="get" class="form-row" style="align-items:end"><div class="form-field"><label for="reportMonth">Mes</label><input id="reportMonth" name="mes" type="month" required value="<%= new Date().toISOString().slice(0,7) %>"></div><button class="btn btn-primary" type="submit">Descargar CSV mensual</button></form></article>
-          <div class="report-period"><svg class="ico"><use href="#i-clock"/></svg> Semana del <strong><%= bounds.start %></strong> al <strong><%= bounds.end %></strong> · Horario de México</div>
-          <div class="metric-grid report-stats"><article class="metric-card"><div class="metric-top">Hojas blanco y negro</div><strong class="metric-number"><%= report.bn.hojas %></strong><div class="metric-foot"><%= report.bn.trabajos %> trabajos</div></article><article class="metric-card"><div class="metric-top">Hojas a color</div><strong class="metric-number"><%= report.color.hojas %></strong><div class="metric-foot"><%= report.color.trabajos %> trabajos</div></article><article class="metric-card"><div class="metric-top">Ingresos B/N</div><strong class="metric-number money-stat"><%= fmx(report.bn.ingresos) %></strong><div class="metric-foot">Registro de mostrador</div></article><article class="metric-card"><div class="metric-top">Ingresos color</div><strong class="metric-number money-stat"><%= fmx(report.color.ingresos) %></strong><div class="metric-foot">Registro de mostrador</div></article></div>
-          <article class="section-card pad-card"><div class="panel-head"><div><h2>Desglose de la semana</h2><p>Sin gráficas, únicamente números.</p></div><span class="badge badge-green">Ingresos <%= fmx(report.total) %></span></div><div class="table-scroll"><table class="data-table report-table"><thead><tr><th>Servicio</th><th>Trabajos</th><th>Hojas</th><th>Ingresos registrados</th></tr></thead><tbody><tr><td>Blanco y negro</td><td><%= report.bn.trabajos %></td><td><%= report.bn.hojas %></td><td><strong><%= fmx(report.bn.ingresos) %></strong></td></tr><tr><td>A color</td><td><%= report.color.trabajos %></td><td><%= report.color.hojas %></td><td><strong><%= fmx(report.color.ingresos) %></strong></td></tr><tr class="total-row"><td>Total</td><td><%= report.bn.trabajos + report.color.trabajos %></td><td><%= report.bn.hojas + report.color.hojas %></td><td><%= fmx(report.total) %></td></tr></tbody></table></div></article><p class="helper-below">Los importes son ingresos registrados, no ganancias netas. Para calcular utilidad se necesitan los costos reales de tóner, tinta, papel y operación.</p>
+          <div class="page-intro">
+            <div>
+              <div class="eyebrow">ACTIVIDAD DE LA PAPELERÍA</div>
+              <h1>Reportes y seguimiento</h1>
+              <p>Pedidos de Telegram, documentos PDF y servicios de impresión guardados en PostgreSQL.</p>
+            </div>
+            <button class="btn btn-quiet" id="refreshReports" type="button" aria-label="Actualizar datos del reporte">
+              <svg class="ico"><use href="#i-chart"/></svg> Actualizar reportes
+            </button>
+          </div>
+
+          <div class="report-period"><svg class="ico"><use href="#i-clock"/></svg>
+            Actividad semanal: <strong><%= bounds.start %></strong> al <strong><%= bounds.end %></strong> · Zona horaria de México
+          </div>
+          <div class="report-kpi-grid" aria-label="Indicadores históricos y semanales de pedidos">
+            <article class="report-kpi">
+              <span class="report-kpi-label">Pedidos registrados</span>
+              <strong><%= reporteActividad.allCount %></strong>
+              <small>Histórico · incluye pedidos ya cerrados</small>
+            </article>
+            <article class="report-kpi">
+              <span class="report-kpi-label">Pedidos esta semana</span>
+              <strong><%= reporteActividad.weeklyCount %></strong>
+              <small>Cotizaciones: <%= fmx(reporteActividad.weeklyQuoted) %></small>
+            </article>
+            <article class="report-kpi">
+              <span class="report-kpi-label">Archivos PDF registrados</span>
+              <strong><%= reporteActividad.totalPdf %></strong>
+              <small>En <%= reporteActividad.ordersWithPdf %> pedido(s)</small>
+            </article>
+            <article class="report-kpi">
+              <span class="report-kpi-label">Importe total cotizado</span>
+              <strong class="report-kpi-money"><%= fmx(reporteActividad.allCotizado) %></strong>
+              <small>Cotizaciones históricas · no pagos recibidos</small>
+            </article>
+          </div>
+          <p class="report-disclaimer"><svg class="ico"><use href="#i-alert"/></svg>
+            Los pedidos registrados pueden incluir pruebas del desarrollo. No hay una marca que permita distinguir todas las pruebas de los pedidos reales. Las cotizaciones NO son ventas cobradas ni ingresos confirmados.
+          </p>
+
+          <div class="report-visual-grid">
+            <article class="section-card report-visual-card">
+              <div class="panel-head"><div>
+                <h2>Pedidos de la semana</h2>
+                <p>Cantidad por día, incluyendo pendientes, aceptados, entregados y rechazados</p>
+              </div><span class="badge badge-green"><%= reporteActividad.weeklyCount %> pedidos</span></div>
+              <div class="report-bars" role="img" aria-label="Gráfica de pedidos registrados por día de la semana">
+                <% reporteActividad.days.forEach(d=>{ %>
+                  <div class="report-day-column" title="<%= d.date %>: <%= d.total %> pedidos">
+                    <span class="report-bar-value"><%= d.total %></span>
+                    <div class="report-bar-slot">
+                      <div class="report-bar-fill <%= d.total ? '' : 'is-zero' %>" style="--bar-height:<%= d.height %>%"></div>
+                    </div>
+                    <span class="report-day-label"><%= d.label %></span>
+                    <span class="report-day-date"><%= d.day %></span>
+                  </div>
+                <% }) %>
+              </div>
+              <p class="report-chart-note">Los días sin pedidos aparecen con valor cero. Solo se incluyen los registros de PostgreSQL.</p>
+            </article>
+            <article class="section-card report-visual-card">
+              <div class="panel-head"><div><h2>Estado de los pedidos</h2><p>Distribución histórica de todas las solicitudes</p></div></div>
+              <div class="report-state-chart" role="img" aria-label="Gráfica horizontal de pedidos por estado">
+                <% reporteActividad.states.forEach(s=>{ %>
+                  <div class="report-state-item">
+                    <div class="report-state-heading">
+                      <span><i class="report-state-dot report-state-<%= s.className %>"></i><%= s.label %></span>
+                      <strong><%= s.count %> <small>(<%= s.percent %>%)</small></strong>
+                    </div>
+                    <div class="report-state-track">
+                      <div class="report-state-fill report-state-<%= s.className %>" style="--state-width:<%= s.percent %>%"></div>
+                    </div>
+                  </div>
+                <% }) %>
+              </div>
+              <p class="report-chart-note">Un pedido entregado no acredita por sí mismo el pago. Rechazados y cancelados también permanecen en el histórico.</p>
+            </article>
+          </div>
+
+          <article class="section-card report-history">
+            <div class="panel-head">
+              <div><h2>Historial de pedidos y pruebas</h2><p>Hasta 150 registros recientes; se conservan incluso después de atenderlos.</p></div>
+              <span class="badge badge-green" id="reportVisibleCount"><%= reporteActividad.recent.length %> visibles</span>
+            </div>
+            <div class="report-history-filters">
+              <div class="form-field"><label for="reportDateFilter">Filtrar por fecha</label><input id="reportDateFilter" type="date" max="<%= reporteActividad.today %>"></div>
+              <div class="form-field"><label for="reportStatusFilter">Estado del pedido</label>
+                <select id="reportStatusFilter">
+                  <option value="">Todos los estados</option>
+                  <% reporteActividad.states.forEach(s=>{ %><option value="<%= s.key %>"><%= s.label %></option><% }) %>
+                </select>
+              </div>
+              <button id="reportToday" type="button" class="btn btn-primary">Ver pruebas de hoy</button>
+              <button id="reportClear" type="button" class="btn btn-quiet">Ver todos</button>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table report-history-table">
+                <thead><tr><th>Folio</th><th>Fecha y hora (México)</th><th>Estado</th><th>Artículos</th><th>PDF</th><th>Importe cotizado</th></tr></thead>
+                <tbody id="reportHistoryBody">
+                  <% reporteActividad.recent.forEach(p=>{ %>
+                    <tr data-report-date="<%= p.date %>" data-report-status="<%= p.estado %>">
+                      <td class="cell-id">#<%= p.id %></td>
+                      <td><%= p.date %> · <%= p.time %></td>
+                      <td><span class="report-status-badge report-status-<%= p.statusClass %>"><%= p.statusLabel %></span></td>
+                      <td><%= p.items %></td><td><%= p.pdf %></td><td class="price-cell"><%= fmx(p.total) %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+              <div class="empty-state compact" id="reportNoMatches" hidden><strong>Sin registros con estos filtros</strong><p>Cambia la fecha o el estado para consultar otras solicitudes.</p></div>
+            </div>
+            <div class="table-footer"><span>Las fechas se muestran en horario del centro de México.</span><span>Por privacidad, no se muestran nombres ni cuentas de estudiantes.</span></div>
+          </article>
+
+          <div class="report-section-divider"><span>Servicios de impresión registrados en mostrador</span></div>
+          <div class="page-intro report-subheading">
+            <div><h2>Resumen de impresiones</h2><p>Solo considera servicios registrados manualmente como terminados; las cotizaciones PDF no se suman aquí.</p></div>
+            <a class="btn btn-primary" href="/reportes/semanal.csv"><svg class="ico"><use href="#i-file"/></svg> Exportar CSV semanal</a>
+          </div>
+          <div class="metric-grid report-stats">
+            <article class="metric-card"><div class="metric-top">Hojas blanco y negro</div><strong class="metric-number"><%= report.bn.hojas %></strong><div class="metric-foot"><%= report.bn.trabajos %> trabajos</div></article>
+            <article class="metric-card"><div class="metric-top">Hojas a color</div><strong class="metric-number"><%= report.color.hojas %></strong><div class="metric-foot"><%= report.color.trabajos %> trabajos</div></article>
+            <article class="metric-card"><div class="metric-top">Importe registrado B/N</div><strong class="metric-number money-stat"><%= fmx(report.bn.ingresos) %></strong><div class="metric-foot">No confirma cobro</div></article>
+            <article class="metric-card"><div class="metric-top">Importe registrado color</div><strong class="metric-number money-stat"><%= fmx(report.color.ingresos) %></strong><div class="metric-foot">No confirma cobro</div></article>
+          </div>
+          <article class="section-card pad-card">
+            <div class="panel-head"><div><h2>Desglose semanal de impresión</h2><p>Servicios registrados manualmente durante la semana indicada.</p></div><span class="badge badge-green">Importe registrado <%= fmx(report.total) %></span></div>
+            <div class="table-scroll"><table class="data-table report-table">
+              <thead><tr><th>Servicio</th><th>Trabajos</th><th>Hojas</th><th>Importe registrado</th></tr></thead>
+              <tbody><tr><td>Blanco y negro</td><td><%= report.bn.trabajos %></td><td><%= report.bn.hojas %></td><td><strong><%= fmx(report.bn.ingresos) %></strong></td></tr><tr><td>A color</td><td><%= report.color.trabajos %></td><td><%= report.color.hojas %></td><td><strong><%= fmx(report.color.ingresos) %></strong></td></tr><tr class="total-row"><td>Total</td><td><%= report.bn.trabajos + report.color.trabajos %></td><td><%= report.bn.hojas + report.color.hojas %></td><td><%= fmx(report.total) %></td></tr></tbody>
+            </table></div>
+          </article>
+          <article class="section-card pad-card report-monthly">
+            <div class="panel-head"><div><h2>Corte mensual</h2><p>Exporta los servicios de impresión registrados para un mes.</p></div></div>
+            <form action="/reportes/mensual.csv" method="get" class="form-row" style="align-items:end">
+              <div class="form-field"><label for="reportMonth">Mes</label><input id="reportMonth" name="mes" type="month" required value="<%= reporteActividad.today.slice(0,7) %>"></div>
+              <button class="btn btn-primary" type="submit">Descargar CSV mensual</button>
+            </form>
+          </article>
+          <p class="helper-below">El importe registrado por impresión tampoco demuestra el cobro o la utilidad neta. Para calcular ganancias se requieren comprobantes de pago y costos reales de tinta, papel y operación.</p>
         </section>
 
         <section class="view" id="view-configuracion" data-view="configuracion" hidden>
