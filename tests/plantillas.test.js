@@ -41,7 +41,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="reportView" type="submit" class="btn btn-primary">Ver</button>'));
   assert(html.includes('/public/reportes-uaem-v1.css?v=2'));
   assert(html.includes('/public/reportes-historial-v1.js?v=1'));
-  assert(html.includes('/public/panel.js?v=2'));
+  assert(html.includes('/public/panel.js?v=3'));
   assert(!html.includes('class="flash"'));
 
   assert(!html.includes('Historial de pedidos y pruebas'));
