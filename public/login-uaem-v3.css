@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Acceso WebAlma UAEM - reproducción de la referencia del equipo.
+   Estilos aislados del Dashboard. En escritorio entra completo en una vista. */
+:root {
+  --uaem:#085238;
+  --uaem-oscuro:#073b29;
+  --dorado:#f7c639;
+  --texto:#113e2d;
+  --fondo:#faf9f4;
+  font-family:'DM Sans',Arial,sans-serif;
+  font-synthesis:none;
+}
+*,*::before,*::after { box-sizing:border-box }
+html { margin:0; padding:0; min-width:320px; }
+body { margin:0 }
+button,input { font:inherit }
+.login-uaem {
+  height:100vh;
+  height:100dvh;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:clamp(12px,3vh,35px);
+  position:relative;
+  isolation:isolate;
+  background:linear-gradient(115deg,#f6f8f2 0%,#fcfbf7 64%,#f4f7ee 100%);
+  color:var(--texto);
+}
+.login-decor {position:absolute;pointer-events:none;z-index:-1}
+.login-decor.one {
+  top:-19vw;left:-14vw;
+  width:min(43vw,610px);aspect-ratio:1;border-radius:0 0 65% 40%;
+  transform:rotate(19deg);background:linear-gradient(125deg,#becfbb,#e9f0e5);
+}
+.login-decor.two {
+  bottom:-17vw;right:-13vw;width:min(44vw,620px);aspect-ratio:1;
+  border-radius:65% 35% 10% 60%;transform:rotate(32deg);
+  background:linear-gradient(40deg,#dde6d8,#f9fbf8);
+}
+.uaem-login-shell {
+  --card-height:min(865px, calc(100dvh - 32px));
+  width:min(1460px,calc(100vw - 36px),calc((100dvh - 32px)*1.79));
+  aspect-ratio:1460 / 815;
+  height:auto;
+  max-height:var(--card-height);
+  min-height:0;
+  background:#fff;
+  border-radius:clamp(16px,2vw,31px);
+  box-shadow:0 24px 55px #163f301f,0 10px 18px #1f4d3510;
+  display:grid;
+  grid-template-columns:minmax(0,44%) minmax(0,56%);
+  overflow:hidden;
+  container-type:inline-size;
+  position:relative;
+}
+.login-card {
+  min-width:0;min-height:0;
+  padding:clamp(21px,3.0cqw,48px) 10.8% clamp(17px,2.9cqw,43px);
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  background:#fff;
+  overflow:hidden;
+}
+.login-brand {display:flex;align-items:center;gap:clamp(8px,1.05cqw,18px)}
+.brand-mark {
+  flex:none;
+  width:clamp(46px,4.8cqw,80px);
+  height:clamp(46px,4.8cqw,80px);
+  border-radius:clamp(12px,1.1cqw,20px);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;
+  font:800 clamp(27px,3.5cqw,55px)/1 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.1em;
+  background:linear-gradient(145deg,#14674a,#06432e);
+  box-shadow:0 7px 14px #07493020;
+}
+.brand-mark span {color:var(--dorado)}
+.brand-name {
+  font:800 clamp(23px,2.55cqw,39px)/1.12 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.05em;
+  color:#073c2a;
+}
+.brand-sub {
+  font:800 clamp(8px,.93cqw,14px)/1.4 'DM Sans',sans-serif;
+  letter-spacing:.2em;
+  color:#4e5561;margin-top:5px;
+  white-space:nowrap;
+}
+.login-brand-line {width:clamp(60px,7cqw,103px);height:4px;border-radius:10px;background:var(--dorado);margin-top:8px}
+.login-content {align-self:center;min-width:0;padding:0}
+.eyebrow {
+  display:block;margin-bottom:clamp(6px,.55cqw,12px);
+  font:800 clamp(10px,1.15cqw,17px)/1.2 'DM Sans',sans-serif;
+  color:#096139;letter-spacing:.065em
+}
+.login-content h1 {
+  font:800 clamp(25px,3.1cqw,47px)/1.12 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.05em;color:#073c29;margin:0 0 clamp(10px,1.3cqw,20px);
+}
+.login-content>p {
+  font-size:clamp(12px,1.22cqw,18px);
+  line-height:1.52;
+  color:#454b4a;
+  margin:0 0 clamp(17px,2.0cqw,31px)
+}
+.stack-form {display:flex;flex-direction:column;gap:clamp(11px,1.25cqw,22px)}
+.form-field {display:flex;flex-direction:column;gap:clamp(5px,.56cqw,9px)}
+.form-field label {
+  font-size:clamp(12px,1.21cqw,18px);
+  font-weight:800;
+  color:#07442e;
+}
+.form-field input {
+  width:100%;
+  height:clamp(40px,4.1cqw,64px);
+  padding:0 clamp(10px,1.3cqw,19px);
+  border:1.5px solid #cbd0cc;
+  border-radius:clamp(7px,.82cqw,13px);
+  font-size:clamp(12px,1.35cqw,19px);
+  line-height:1.3;
+  color:#154331;
+  background:#fff;
+}
+.form-field input::placeholder {color:#626866;opacity:1}
+.form-field input:focus {outline:none;border-color:#107843;box-shadow:0 0 0 2px #0b7b4024}
+.form-field input:focus-visible {outline:2px solid #14754b;outline-offset:1px}
+.btn-primary {
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  width:100%;
+  min-height:clamp(47px,4.6cqw,69px);
+  margin-top:clamp(5px,.65cqw,11px);
+  border:none;
+  border-bottom:clamp(4px,.44cqw,7px) solid #e7aa13;
+  border-radius:clamp(8px,1.05cqw,14px);
+  background:linear-gradient(150deg,#126847,#084e36);
+  color:#fff;
+  font-size:clamp(12px,1.37cqw,20px);
+  font-weight:800;
+  box-shadow:0 9px 17px #06442e24;
+  cursor:pointer;
+}
+.btn-primary:hover {background:linear-gradient(150deg,#187653,#075338)}
+.btn-primary:focus-visible {outline:3px solid #edbb29;outline-offset:3px}
+.btn-primary .button-arrow {width:1em;height:1em;stroke:currentColor;stroke-width:3;fill:none}
+.login-error {
+  padding:9px 12px;margin-bottom:12px;
+  border-radius:7px;border:1px solid #f0b0a6;
+  background:#fff2ee;color:#993326;
+  font-size:clamp(11px,1cqw,14px)
+}
+.login-footer {
+  display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.15cqw,17px);
+  color:#5f625d;font-size:clamp(9px,.91cqw,13px);
+  white-space:nowrap;line-height:1.35;
+}
+.uaem-footer-line {width:clamp(26px,5.2cqw,76px);height:2px;background:#dfab16;flex:none}
+
+/* Panel derecho */
+.login-side {
+  min-width:0;min-height:0;
+  position:relative;
+  color:#fff;
+  background:
+    radial-gradient(ellipse 95% 85% at 2% 60%,#1b6a48 0%,transparent 78%),
+    radial-gradient(ellipse 80% 70% at 100% 98%,#1c7048 0%,transparent 100%),
+    linear-gradient(130deg,#0c5f3e,#06482e 80%);
+  overflow:hidden;
+}
+.uaem-panel-shape {
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;opacity:.45;
+}
+.uaem-hexagons {
+  position:absolute;right:0;top:0;
+  width:clamp(120px,15.2cqw,220px);
+  height:clamp(85px,11cqw,160px);
+  z-index:1;opacity:.4;pointer-events:none;
+}
+.uaem-institution {
+  position:absolute;
+  top:4.2%;left:7.7%;
+  display:flex;align-items:center;
+  gap:clamp(10px,1.5cqw,23px);
+  z-index:4;
+}
+.uaem-institution img {
+  width:clamp(54px,7.9cqw,113px);
+  height:clamp(54px,7.9cqw,113px);
+  flex:none;object-fit:contain;
+}
+.uaem-institution-copy {
+  padding-left:clamp(9px,1.7cqw,25px);
+  border-left:3px solid #edc235;
+}
+.uaem-institution-copy strong {
+  display:block;
+  font:800 clamp(12px,1.55cqw,23px)/1.18 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.025em;
+  padding-bottom:clamp(3px,.55cqw,8px);
+  border-bottom:2px solid var(--dorado);
+}
+.uaem-institution-copy span {
+  display:block;
+  font:600 clamp(11px,1.36cqw,20px)/1.21 'DM Sans',sans-serif;
+  margin-top:clamp(3px,.5cqw,7px);
+}
+.uaem-mascot {
+  position:absolute;
+  left:0.5%;
+  top:23%;
+  height:73.5%;
+  width:54%;
+  overflow:hidden;
+  display:flex;align-items:flex-end;justify-content:center;
+  z-index:2;
+}
+.uaem-mascot img {
+  display:block;
+  width:100%;height:100%;
+  object-fit:contain;object-position:center bottom;
+  background:transparent;
+  border:none;box-shadow:none;border-radius:0;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 4%,#000 97%,transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 4%,#000 97%,transparent 100%);
+}
+.uaem-side-information {
+  position:absolute;z-index:3;
+  left:54%;right:5%;top:17.5%;bottom:8%;
+  display:flex;flex-direction:column;
+  align-items:stretch;justify-content:space-around;
+  min-width:0;
+}
+.uaem-side-title {text-align:center;position:relative}
+.uaem-side-title h2 {
+  font:800 italic clamp(27px,3.85cqw,56px)/1.1 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.065em;
+  white-space:nowrap;
+  margin:0 0 5px;
+  text-shadow:0 2px 5px #07372435;
+}
+.uaem-sparkle {
+  position:absolute;right:2.5%;top:-4%;
+  width:clamp(24px,3.7cqw,55px);
+  height:clamp(24px,3.7cqw,55px);
+  pointer-events:none;
+}
+.uaem-yellow-tag {
+  display:inline-block;
+  padding:clamp(4px,.65cqw,9px) clamp(9px,1.05cqw,17px);
+  color:#093c28;
+  background:#facd37;
+  border-radius:999px;
+  font:800 italic clamp(12px,1.56cqw,23px)/1.05 'Plus Jakarta Sans',sans-serif;
+  transform:rotate(-2deg);
+  white-space:nowrap;
+}
+.uaem-side-title p {
+  color:white;
+  font:700 italic clamp(10px,1.23cqw,18px)/1.2 'DM Sans',sans-serif;
+  margin:clamp(7px,.9cqw,14px) 0 0;
+  text-align:center;
+}
+.uaem-feature-list {display:flex;flex-direction:column;gap:clamp(7px,.8cqw,12px)}
+.uaem-feature {
+  display:flex;align-items:center;gap:clamp(7px,1.1cqw,17px);
+  min-height:clamp(52px,5.2cqw,77px);
+  padding:clamp(6px,.65cqw,10px) clamp(9px,.95cqw,15px);
+  background:#fffdf7;color:#141715;
+  border-left:clamp(6px,.8cqw,11px) solid var(--dorado);
+  border-radius:clamp(8px,1.1cqw,16px);
+  box-shadow:0 4px 12px #083f2f30;
+}
+.uaem-feature-icon {
+  display:grid;place-items:center;
+  width:clamp(32px,3.9cqw,57px);
+  height:clamp(32px,3.9cqw,57px);
+  flex:none;
+  background:#e9ecdf;
+  border-radius:clamp(8px,.95cqw,14px);
+  color:#0b4a35;
+}
+.uaem-feature-icon svg {width:65%;height:65%;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.65}
+.uaem-feature strong {
+  font:800 clamp(13px,1.54cqw,23px)/1.1 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.03em;
+  display:block;
+  white-space:nowrap;
+}
+.uaem-feature small {
+  display:block;
+  font:500 clamp(9px,1.03cqw,15px)/1.17 'DM Sans',sans-serif;
+  margin-top:clamp(2px,.28cqw,4px);
+  letter-spacing:-.015em;
+}
+.uaem-side-slogan {
+  margin:0;
+  font:800 italic clamp(14px,1.73cqw,25px)/1.08 'Plus Jakarta Sans',sans-serif;
+  letter-spacing:-.03em;
+  text-align:center;
+  color:#fff;
+}
+.uaem-slogan-underline {display:block;height:clamp(5px,.5cqw,8px);width:39%;margin:clamp(5px,.65cqw,10px) auto 0;border-radius:100%;background:var(--dorado);transform:rotate(-8deg)}
+.uaem-side-wave {
+  position:absolute;bottom:-1px;left:0;right:0;width:100%;height:13.5%;z-index:3;pointer-events:none;
+}
+
+/* Modo compacto: los tamaños verticales también dependen de la altura. */
+@media (min-width:801px) and (max-height:700px) {
+  .login-uaem {padding:8px}
+  .uaem-login-shell {width:min(1460px,calc(100vw - 20px),calc((100dvh - 16px)*1.79))}
+  .login-card {padding-top:18px;padding-bottom:14px}
+  .login-content>p {margin-bottom:12px}
+  .stack-form {gap:9px}
+  .btn-primary {margin-top:2px}
+}
+@media (max-width:800px) {
+  .login-uaem {height:auto;min-height:100dvh;overflow-y:auto;align-items:flex-start;padding:15px}
+  .uaem-login-shell {
+    width:min(100%,610px);aspect-ratio:auto;height:auto;max-height:none;
+    grid-template-columns:1fr;border-radius:20px;overflow:hidden;
+  }
+  .login-card {min-height:570px;padding:28px 9% 22px;grid-template-rows:auto 1fr auto;overflow:visible}
+  .brand-mark {width:54px;height:54px;font-size:33px}
+  .brand-name {font-size:28px}
+  .brand-sub {font-size:10px}
+  .login-content h1 {font-size:30px}
+  .eyebrow {font-size:12px}
+  .login-content>p {font-size:14px}
+  .form-field label {font-size:14px}
+  .form-field input {height:52px;font-size:14px}
+  .btn-primary {min-height:55px;font-size:15px}
+  .login-footer {font-size:10px}
+  .login-side {min-height:570px;aspect-ratio:818 / 816}
+  .uaem-institution img {width:60px;height:60px}
+  .uaem-institution-copy strong {font-size:15px}
+  .uaem-institution-copy span {font-size:12px}
+  .uaem-side-title h2 {font-size:32px}
+  .uaem-yellow-tag {font-size:14px}
+  .uaem-side-title p {font-size:12px}
+  .uaem-feature strong {font-size:14px}
+  .uaem-feature small {font-size:10px}
+  .uaem-feature {min-height:56px}
+  .uaem-feature-icon {width:35px;height:35px}
+  .uaem-side-slogan {font-size:15px}
+}
+@media (max-width:430px) {
+  .login-card {min-height:520px;padding:24px 7% 20px}
+  .login-brand {gap:10px}
+  .brand-mark {width:47px;height:47px;font-size:28px}
+  .brand-name {font-size:25px}
+  .brand-sub {font-size:8px}
+  .login-content h1 {font-size:26px}
+  .login-content>p {font-size:12px;margin-bottom:18px}
+  .stack-form {gap:12px}
+  .login-side {min-height:390px}
+  .uaem-institution img {width:44px;height:44px}
+  .uaem-institution-copy strong {font-size:11px}
+  .uaem-institution-copy span {font-size:9px}
+  .uaem-side-title h2 {font-size:23px}
+  .uaem-yellow-tag {font-size:10px}
+  .uaem-side-title p {font-size:9px}
+  .uaem-feature-list {gap:5px}
+  .uaem-feature {min-height:43px;gap:5px;padding:5px}
+  .uaem-feature-icon {width:26px;height:26px}
+  .uaem-feature strong {font-size:10px}
+  .uaem-feature small {font-size:8px}
+  .uaem-side-slogan {font-size:11px}
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after {scroll-behavior:auto;transition:none!important}
+}
