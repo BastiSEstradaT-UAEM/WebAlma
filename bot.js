@@ -15,7 +15,7 @@ const inicio=()=>kb([
 ]);
 const seguir=()=>kb([[['📚 Productos','productos'],['📄 PDF','pdf_inicio']],[['🛒 Mi carrito','carrito'],['✅ Finalizar','checkout']]]);
 function precioMenu(){return kb([[['1 copia','pdf_copias:1'],['2 copias','pdf_copias:2'],['3 copias','pdf_copias:3']],[['5 copias','pdf_copias:5'],['10 copias','pdf_copias:10']],[['✏️ Otra cantidad','pdf_copias:otra']],[['⬅️ Menú','inicio']]]);}
-function createBot(onOrder){
+function createBot(onOrder,{ahora=()=>new Date()}={}){
   if(!process.env.TELEGRAM_BOT_TOKEN)throw new Error('Falta TELEGRAM_BOT_TOKEN.');
   const bot=new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
   bot.use(session({store:db.telegramStore}));
@@ -26,7 +26,7 @@ function createBot(onOrder){
   bot.use(async(ctx,next)=>{
     if(ctx.updateType!=='message'&&ctx.updateType!=='callback_query')return next();
     const cfg=await db.getConfig();
-    if(estaAbierto(cfg.horario)!==false)return next();
+    if(estaAbierto(cfg.horario,ahora())!==false)return next();
     if(ctx.callbackQuery){
       await ctx.answerCbQuery('La papelería está cerrada por el momento.').catch(()=>{});
       // Solo se oculta el teclado del mensaje presionado: Telegram no permite
@@ -222,7 +222,7 @@ function createBot(onOrder){
         articulos:q.items.map(i=>({productoId:i.tipo==='producto'?i.productoId:null,descripcion:i.descripcion,
           cantidad:i.cantidad,precioUnitario:i.precioUnitario,subtotal:i.subtotal,archivo:i.archivo||null}))};
       // Verificación final por si el horario terminó durante la cotización.
-      if(estaAbierto((await db.getConfig()).horario)===false)return ctx.reply(MENSAJE_CERRADO);
+      if(estaAbierto((await db.getConfig()).horario,ahora())===false)return ctx.reply(MENSAJE_CERRADO);
       const r=await onOrder(pedido);ctx.session.carrito=[];ctx.session.pdfPendiente=null;
       await ctx.editMessageReplyMarkup({inline_keyboard:[]}).catch(()=>{});
       return ctx.reply(`✅ Solicitud registrada${r?.id?' · Folio '+r.id:''}\nTotal estimado: ${pesos(q.total)}\nTu pedido está pendiente de revisión. Recibirás un aviso por Telegram cuando sea aceptado o rechazado. No está pagado ni preparado.`,inicio());
