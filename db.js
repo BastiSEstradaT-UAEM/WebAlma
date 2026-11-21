@@ -89,6 +89,31 @@ async function getReportActivity(bounds,today){
   return buildReportActivity(summary.rows,daily.rows,recent.rows,pdf.rows[0],bounds,today);
 }
 
+/**
+ * Historial solicitado por la propietaria. No se carga en la pantalla hasta
+ * que el usuario seleccione fecha o estado y presione "Ver".
+ * Únicamente metadatos; no exponemos cuentas, nombres ni tokens de Telegram.
+ */
+async function getReportHistory(fecha=null,estado=null) {
+  const max=200;
+  const {rows}=await query(`SELECT p.id,
+    to_char(p.fecha AT TIME ZONE 'America/Mexico_City','YYYY-MM-DD') AS dia,
+    to_char(p.fecha AT TIME ZONE 'America/Mexico_City','HH24:MI') AS hora,
+    p.estado, p.total,
+    (SELECT COUNT(*)::integer FROM public.detalle_pedido d WHERE d.pedido_id=p.id) AS articulos,
+    (SELECT COUNT(*)::integer FROM public.documentos_impresion f WHERE f.pedido_id=p.id) AS pdf,
+    COUNT(*) OVER()::integer AS total_resultados
+    FROM public.pedidos p
+    WHERE ($1::date IS NULL OR (p.fecha AT TIME ZONE 'America/Mexico_City')::date=$1::date)
+      AND ($2::text IS NULL OR p.estado=$2::text)
+    ORDER BY p.fecha DESC,p.id DESC LIMIT $3`,[fecha||null,estado||null,max]);
+  return {total:rows.length?Number(rows[0].total_resultados):0,limite:max,
+    registros:rows.map(r=>({
+      id:String(r.id),fecha:r.dia,hora:r.hora,estado:r.estado,
+      articulos:Number(r.articulos||0),pdf:Number(r.pdf||0),total:Number(r.total||0)
+    }))};
+}
+
 async function getImpressions() {
   const {rows}=await query(`SELECT id,fecha,tipo,cantidad,precio_unitario,total,observacion
     FROM public.impresiones ORDER BY fecha, id`);
@@ -242,5 +267,5 @@ const telegramStore={
   ON CONFLICT(clave) DO UPDATE SET datos=$2,actualizado=NOW()`,[key,JSON.stringify(value)]);},
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
-module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,getReportActivity,
+module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,getReportActivity,getReportHistory,
   createProduct,editProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
