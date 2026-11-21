@@ -42,7 +42,7 @@ button,input { font:inherit }
 }
 .uaem-login-shell {
   --card-height:min(865px, calc(100dvh - 32px));
-  width:min(1460px,calc(100vw - 36px),calc((100dvh - 32px)*1.79));
+  width:min(1460px,calc(100vw - 36px),calc(179dvh - 57px));
   aspect-ratio:1460 / 815;
   height:auto;
   max-height:var(--card-height);
@@ -309,7 +309,7 @@ button,input { font:inherit }
 /* Modo compacto: los tamaños verticales también dependen de la altura. */
 @media (min-width:801px) and (max-height:700px) {
   .login-uaem {padding:8px}
-  .uaem-login-shell {width:min(1460px,calc(100vw - 20px),calc((100dvh - 16px)*1.79))}
+  .uaem-login-shell {width:min(1460px,calc(100vw - 20px),calc(179dvh - 29px))}
   .login-card {padding-top:18px;padding-bottom:14px}
   .login-content>p {margin-bottom:12px}
   .stack-form {gap:9px}
