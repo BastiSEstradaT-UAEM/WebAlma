@@ -209,8 +209,8 @@ button,input { font:inherit }
 .uaem-mascot {
   position:absolute;
   left:0.5%;
-  top:23%;
-  height:73.5%;
+  top:20%;
+  height:77%;
   width:54%;
   overflow:hidden;
   display:flex;align-items:flex-end;justify-content:center;
@@ -222,6 +222,9 @@ button,input { font:inherit }
   object-fit:contain;object-position:center bottom;
   background:transparent;
   border:none;box-shadow:none;border-radius:0;
+  /* Cuxi un 10 % más alta, anclada al suelo; conservar nitidez sin estirarla. */
+  transform:scale(1.10);
+  transform-origin:center bottom;
   -webkit-mask-image:linear-gradient(to right,transparent 0,#000 4%,#000 97%,transparent 100%);
   mask-image:linear-gradient(to right,transparent 0,#000 4%,#000 97%,transparent 100%);
 }
@@ -355,6 +358,7 @@ button,input { font:inherit }
   .login-content>p {font-size:12px;margin-bottom:18px}
   .stack-form {gap:12px}
   .login-side {min-height:390px}
+  .uaem-mascot img {transform:scale(1.04)}
   .uaem-institution img {width:44px;height:44px}
   .uaem-institution-copy strong {font-size:11px}
   .uaem-institution-copy span {font-size:9px}

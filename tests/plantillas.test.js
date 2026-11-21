@@ -71,7 +71,8 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('Papelería universitaria'));
   assert(html.includes('CU UAEM Valle de Chalco'));
   assert(html.includes('Centro Universitario UAEM Valle de Chalco'));
-  assert(html.includes('escudo-uaem.webp'));
+  assert(html.includes('escudo-uaem-nitido.svg'));
+  assert(!html.includes('/public/escudo-uaem.webp'));
   assert(html.includes('WebAlma'));
   if(role==='administradora') { 
     assert(html.includes('reportes/mensual.csv'));
@@ -212,7 +213,7 @@ assert(!aceptadoHTML.includes('action="/pedidos/55/rechazar"'));
 const login=ejs.render(fs.readFileSync(path.join(BASE,'views/login.ejs'),'utf8'),{error:false,csrf:'test'});
 assert(login.includes('login'));
 assert(login.includes('login-uaem'));
-assert(login.includes('/public/login-uaem-v3.css?v=3'));
+assert(login.includes('/public/login-uaem-v3.css?v=4'));
 assert(!login.includes('/public/login-uaem-v2.css'));
 assert(!login.includes('/public/panel.css'));
 assert(login.includes('uaem-side-wave'));
@@ -223,6 +224,8 @@ const loginCss=fs.readFileSync(path.join(BASE,'public/login-uaem-v3.css'),'utf8'
 assert(loginCss.includes('grid-template-columns:minmax(0,44%) minmax(0,56%)'));
 assert(loginCss.includes('height:100dvh'));
 assert(loginCss.includes('overflow:hidden'));
+assert(loginCss.includes('transform:scale(1.10)'));
+assert(loginCss.includes('transform-origin:center bottom'));
 assert(loginCss.includes('@media (max-width:800px)'));
 assert(loginCss.includes('background:linear-gradient(150deg,#126847,#084e36)'));
 assert(login.includes('Centro Universitario UAEM'));
@@ -231,14 +234,15 @@ assert(!login.includes('src="/public/cuxi-papeleria.webp"'));
 const cuxiAsset=fs.readFileSync(path.join(BASE,'public/cuxi-webalma-nitido.svg'),'utf8');
 assert(cuxiAsset.includes('data:image/avif;base64,'),'La nueva ilustración de Cuxi debe incluir el recurso de alta definición');
 assert(cuxiAsset.length>15000,'El recurso de Cuxi no debe ser una miniatura vacía');
-assert(login.includes('escudo-uaem.webp'));
+assert(login.includes('escudo-uaem-nitido.svg'));
+assert(!login.includes('/public/escudo-uaem.webp'));
 assert(login.includes('method="post"'));
 assert(login.includes('name="_csrf"'));
 assert(login.includes('autocomplete="username"'));
 assert(login.includes('autocomplete="current-password"'));
 const loginError=ejs.render(fs.readFileSync(path.join(BASE,'views/login.ejs'),'utf8'),{error:true,csrf:'test'});
 assert(loginError.includes('role="alert"'));
-for(const asset of ['cuxi-papeleria.webp','escudo-uaem.webp']) {
+for(const asset of ['cuxi-papeleria.webp','escudo-uaem-nitido.svg']) {
   const filepath=path.join(BASE,'public',asset);
   assert(fs.existsSync(filepath),`Falta recurso visual: ${asset}`);
   assert(fs.statSync(filepath).size>1000,`Imagen vacía o dañada: ${asset}`);
@@ -252,7 +256,10 @@ assert(uaemPanelCss.includes('.nav-item.active'));
 assert(uaemPanelCss.includes('.btn-primary'));
 assert(uaemPanelCss.includes('.modal'));
 assert(uaemPanelCss.includes('.data-table'));
-assert(fs.statSync(path.join(BASE,'public/escudo-uaem.webp')).size>1000);
+const escudoSVG=fs.readFileSync(path.join(BASE,'public/escudo-uaem-nitido.svg'),'utf8');
+assert(escudoSVG.includes('<svg') && escudoSVG.includes('</svg>'));
+assert(!/<script\b|onload\s*=|javascript:/i.test(escudoSVG));
+assert(fs.statSync(path.join(BASE,'public/escudo-uaem-nitido.svg')).size>10000);
 const reportCss=fs.readFileSync(path.join(BASE,'public/reportes-uaem-v1.css'),'utf8');
 assert(reportCss.includes('.report-bars'));
 assert(reportCss.includes('.report-state-chart'));
