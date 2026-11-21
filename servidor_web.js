@@ -171,6 +171,27 @@ app.post('/impresiones/registrar',auth,csrf,async(req,res)=>{
   await db.registerPrint(tipo,cantidad,tipo==='bn'?cfg.precioBN:cfg.precioColor,clean(req.body.observacion,150),req.session.usuario.id);
   io.emit('impresion_actualizada');go(res,'impresion_registrada','impresiones');
 });
+// Historial bajo demanda: consulta de sólo lectura con filtros obligatorios.
+app.get('/reportes/historial',auth,async(req,res,next)=>{
+  res.set('Cache-Control','private, no-store');
+  const fecha=typeof req.query.fecha==='string'?req.query.fecha.trim():'';
+  const estado=typeof req.query.estado==='string'?req.query.estado.trim():'';
+  const validStates=['pendiente','aceptado','entregado','rechazado','cancelado'];
+  if(!fecha&&!estado)return res.status(400).json({error:'Selecciona una fecha o un estado.'});
+  if(estado&&!validStates.includes(estado))return res.status(400).json({error:'Estado inválido.'});
+  if(fecha){
+    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(fecha))return res.status(400).json({error:'Fecha inválida.'});
+    const [y,m,d]=fecha.split('-').map(Number);
+    const date=new Date(Date.UTC(y,m-1,d));
+    if(Number.isNaN(date.getTime())||date.toISOString().slice(0,10)!==fecha)
+      return res.status(400).json({error:'Fecha inválida.'});
+  }
+  try{
+    const resultados=await db.getReportHistory(fecha||null,estado||null);
+    return res.json(resultados);
+  }catch(e){return next(e);}
+});
+
 app.get('/reportes/semanal.csv',auth,async(req,res)=>{
   const bounds=weekBounds();const data=report(await db.getImpressions(),bounds);
   res.type('text/csv; charset=utf-8').set('Content-Disposition',`attachment; filename="reporte_impresiones_${bounds.start}.csv"`).send(csvReport(data));
