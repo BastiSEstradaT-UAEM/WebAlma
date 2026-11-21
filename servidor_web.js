@@ -46,6 +46,8 @@ function csrf(req,res,next){const a=String(req.body._csrf||''),b=String(req.sess
 const RESULT_MESSAGES=Object.freeze({
   producto_agregado:'Producto agregado al catálogo.',
   producto_actualizado:'Producto actualizado correctamente.',
+  producto_archivado:'Producto retirado del catálogo. Su historial se conserva.',
+  producto_no_encontrado:'El producto ya no está disponible en el catálogo.',
   movimiento_registrado:'Movimiento de inventario registrado.',
   impresion_registrada:'Servicio de impresión registrado.',
   pedido_entregado:'Pedido marcado como entregado.',
@@ -117,6 +119,17 @@ app.post('/inventario/:id/editar',auth,admin,csrf,async(req,res)=>{
   if(!/^\d+$/.test(req.params.id)||!data.producto||data.precio===null||data.minimo===null)return go(res,'datos_invalidos');
   const ok=await db.editProduct(Number(req.params.id),data);
   if(!ok)return go(res,'datos_invalidos');io.emit('inventario_actualizado');go(res,'producto_actualizado');
+});
+// Solo la propietaria puede retirar un producto. No se hace DELETE físico.
+app.post('/inventario/:id/archivar',auth,admin,csrf,async(req,res)=>{
+  const raw=String(req.params.id);
+  const id=Number(raw);
+  if(!/^[1-9]\d*$/.test(raw)||!Number.isSafeInteger(id))
+    return go(res,'datos_invalidos');
+  const archived=await db.archiveProduct(id);
+  if(!archived)return go(res,'producto_no_encontrado');
+  io.emit('inventario_actualizado');
+  return go(res,'producto_archivado');
 });
 app.post('/inventario/:id/movimiento',auth,admin,csrf,async(req,res)=>{
   const cantidad=nonnegInt(req.body.cantidad),tipo=req.body.tipo;
