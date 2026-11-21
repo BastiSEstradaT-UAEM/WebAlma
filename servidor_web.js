@@ -157,10 +157,12 @@ async function resolverDecisionPedido(req,res,accion){
     resultado.notificacion==='sin_destinatario'?'_sin_destinatario':'';
   return go(res,'pedido_'+resultado.estado+sufijo,'pedidos');
 }
-app.post('/pedidos/:id/aceptar',auth,csrf,(req,res)=>resolverDecisionPedido(req,res,'aceptar'));
-app.post('/pedidos/:id/rechazar',auth,csrf,(req,res)=>resolverDecisionPedido(req,res,'rechazar'));
+// En Express 4, enviar los errores asíncronos al manejador central.
+const ejecutarDecision=accion=>(req,res,next)=>resolverDecisionPedido(req,res,accion).catch(next);
+app.post('/pedidos/:id/aceptar',auth,csrf,ejecutarDecision('aceptar'));
+app.post('/pedidos/:id/rechazar',auth,csrf,ejecutarDecision('rechazar'));
 // Conservar la ruta anterior para que enlaces existentes sigan funcionando.
-app.post('/completar_pedido/:id',auth,csrf,(req,res)=>resolverDecisionPedido(req,res,'entregar'));
+app.post('/completar_pedido/:id',auth,csrf,ejecutarDecision('entregar'));
 app.post('/impresiones/registrar',auth,csrf,async(req,res)=>{
   const tipo=req.body.tipo,cantidad=nonnegInt(req.body.cantidad),cfg=await db.getConfig();
   if(!['bn','color'].includes(tipo)||!cantidad||cantidad>50000)return go(res,'datos_invalidos','impresiones');
