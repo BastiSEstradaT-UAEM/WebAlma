@@ -1,0 +1,225 @@
+/* WebAlma · Identidad visual de la papelería del CU UAEM Valle de Chalco.
+   Hoja complementaria: modifica presentación, no la lógica, permisos ni eventos.
+   Colores institucionales inspirados en la referencia proporcionada por el equipo. */
+:root{
+  --uaem-verde:#075338;
+  --uaem-verde-profundo:#073b2b;
+  --uaem-verde-medio:#16734c;
+  --uaem-verde-claro:#e8f4ec;
+  --uaem-oro:#e9b939;
+  --uaem-oro-claro:#fff6d9;
+  --uaem-tinta:#153c2b;
+  --uaem-gris:#536c5d;
+  --uaem-borde:#dce9dd;
+  background:#f5f8f3;
+  color:var(--uaem-tinta);
+}
+body{background:#f5f8f3}
+::selection{background:#f1d36b;color:#103d2b}
+:focus-visible{outline:3px solid #d8a827;outline-offset:2px}
+
+/* Navegación y cabecera: papelería universitaria, no empresa desarrolladora. */
+.sidebar{
+  background:linear-gradient(175deg,#07563b 0%,#073b2b 63%,#062d21 100%);
+  color:#e1f1e4;
+  border-right:1px solid #0b6245;
+}
+.brand-wrap{padding-bottom:38px}
+.brand-mark{
+  color:white;
+  background:linear-gradient(135deg,#187a54,#075037);
+  border:1px solid #6aaf8b;
+  box-shadow:0 7px 19px #001d1370;
+}
+.brand-mark span{color:#f6cf57}
+.brand-name{color:#fffdf6}
+.brand-sub{color:#efd688;letter-spacing:1.17px;font-size:9px}
+.side-label{color:#d7c67f}
+.nav-item{color:#d8eadd}
+.nav-item:hover,.logout-button:hover{background:#146c4b;color:#fff}
+.nav-item.active{
+  color:#fff;
+  background:linear-gradient(95deg,#15774f,#0c6042);
+  border:1px solid #549575;
+  box-shadow:inset 4px 0 var(--uaem-oro),0 3px 15px #001d1425;
+}
+.nav-count{background:#1a6a4c;color:#eef9ed}
+.nav-item.active .nav-count{background:#f4d46b;color:#15452f;font-weight:900}
+.campus-chip{
+  background:#0d513b;border-color:#548468;
+  box-shadow:0 3px 14px #06251a24;
+  gap:10px;align-items:center;
+}
+.campus-chip .campus-seal{
+  display:block;flex:0 0 41px;
+  height:42px;width:41px;
+  border-radius:8px;object-fit:contain;
+  background:#fcf8e7;padding:2px;
+}
+.campus-chip strong{font-size:11px;color:#fff9da}
+.campus-chip small{color:#d7ead8;font-size:10px}
+.campus-dot{background:#f4c94f;box-shadow:0 0 0 3px #eac85328}
+.side-profile{border-color:#267153}
+.profile-name strong{color:#fff}
+.profile-name small{color:#c7dfce}
+.logout-button{color:#d6e8da}
+.avatar,.top-avatar{background:#f8df94;color:#175039}
+.topbar{
+  background:#fffef8;
+  border-bottom:1px solid #dce8da;
+  box-shadow:inset 0 -2px #f2d275;
+}
+.breadcrumb{color:#597565}
+.breadcrumb-sep{color:#b79f52}
+.topbar-left>span:last-child{color:#0e4833}
+.topbar-date,.live-state{color:#496852}
+.topbar-divider{background:#d7e4d9}
+.live-dot{background:#219568;box-shadow:0 0 0 3px #21956820}
+
+/* Superficie del panel, titulares e indicadores. */
+.content{background:transparent}
+.eyebrow{color:#0a7046;letter-spacing:1.6px}
+.page-intro h1{color:#0b3d2d}
+.page-intro p{color:#607668;line-height:1.55}
+.wave{color:#d5a126}
+.metric-card,.panel,.section-card{
+  border:1px solid #dfebe0;
+  box-shadow:0 6px 22px #0a4a3110;
+  background:#fff;
+}
+.metric-card{border-top:3px solid #ddc76a}
+.metric-grid .metric-card:nth-child(2){border-top-color:#71ad86}
+.metric-grid .metric-card:nth-child(3){border-top-color:#e9b06e}
+.metric-grid .metric-card:nth-child(4){border-top-color:#3b9872}
+.metric-top{color:#496e57}
+.metric-number{color:#0b422f}
+.metric-foot{color:#718979}
+.symbol-blue{background:#e6f4e9;color:#0d7149}
+.symbol-orange{background:#fff4e2;color:#c17a1c}
+.symbol-red{background:#ffebec;color:#c75160}
+.symbol-green{background:#def4e8;color:#158b60}
+.panel-head h2{color:#1a4934}
+.panel-head p{color:#718677}
+.subtle-link{color:#0b7448}
+.subtle-link:hover{text-decoration:underline}
+.empty-icon{background:#e9f5eb;color:#0d7950}
+.empty-state{color:#678475}
+.empty-state strong{color:#1c523b}
+.empty-state p{color:#87988a}
+.stock-name,.stock-line-right strong{color:#3a5b46}
+.stock-line{border-color:#edf3eb}
+.notice-bar{
+  color:#6b582c;
+  background:#fff8e9;
+  border-color:#eedaa1;
+}
+.notice-bar .ico{color:#b98316}
+.notice-dismiss{color:#987a38}
+.insight-strip{background:#ebf5ed;border-color:#d3e7d7}
+.insight-icon{background:#d7ecdd;color:#0b714b}
+.insight-strip strong{color:#1a5438}
+.insight-strip p{color:#617d68}
+.insight-strip .btn{background:#fff;color:#0b6b47;border-color:#c4ddc8}
+
+/* Botones principales y acciones; mantener rojo para rechazar y amarillo para avisos. */
+.btn-primary{
+  background:linear-gradient(110deg,#146f4c,#074f36);
+  color:#fff;border-color:#075237;
+  border-bottom:3px solid var(--uaem-oro);
+  box-shadow:0 5px 17px #0c69461c;
+}
+.btn-primary:hover{background:linear-gradient(110deg,#20825b,#096545)}
+.btn-quiet{
+  background:#fff;color:#145f42;border-color:#bfd7c5;
+}
+.btn-quiet:hover{background:#f0f7f1}
+.btn-success{background:#17865d;color:white}
+.btn-success:hover{background:#0d704a}
+.btn-reject{background:#fff0f0;border-color:#f2c9cb;color:#b53948}
+.btn-reject:hover{background:#fee2e2;color:#962a39}
+.table-action{color:#1d6546;border-color:#d3e4d5}
+.table-action:hover{background:#edf7ef;color:#0c6644;border-color:#95c4a5}
+.icon-button{color:#467354}
+.icon-button:hover{background:#e8f3e9}
+
+/* Inventario, reportes y formularios. */
+.inventory-toolbar{border-bottom-color:#e4ece3}
+.search-field,.inventory-toolbar select{
+  border-color:#d1dfd1;background:#fff;color:#2a5340;
+}
+.search-field .ico{color:#62886f}
+.search-field input{color:#234b35}
+.search-field:focus-within{border-color:#278454;box-shadow:0 0 0 3px #39996b20}
+.data-table thead{background:#f0f6ef}
+.data-table th{color:#527560;border-bottom-color:#dce9dc}
+.data-table td{color:#536c5b;border-bottom-color:#e9f0e8}
+.data-table tbody tr:hover{background:#f5fbf5}
+.data-table .cell-id{color:#718a77}
+.product-title{color:#17442f}
+.product-category{color:#809583}
+.price-cell{color:#17462f!important}
+.table-footer{color:#788f7b;border-top-color:#e7efe6}
+.order-card{border-color:#dce9de}
+.mini-avatar{background:#e2f1e5;color:#147047}
+.order-customer strong,.summary-body strong,.recent-row strong{color:#20523b}
+.order-customer small,.summary-body span,.recent-row small{color:#738877}
+.order-items{background:#f4f8f3;border-color:#e1ebe1;color:#566e5e}
+.order-bottom strong,.summary-order>strong{color:#0f4c32}
+.form-field label{color:#2a573e}
+.form-field input,.form-field select,.form-field textarea{border-color:#d5e4d7;color:#184a33}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{
+  border-color:#29845c;box-shadow:0 0 0 3px #4c9b6a26;
+}
+.estimate-box{background:#edf7ee;border-color:#d4ead8;color:#477457}
+.estimate-box strong{color:#0f754c}
+.round-icon{background:#e7f4e9;color:#197149}
+.report-period{background:#f6f9f2;border-color:#dfe8d8;color:#557461}
+.report-period strong{color:#215c3d}
+.report-period .ico{color:#18835a}
+.total-row{background:#e9f5e9!important}
+.total-row td{color:#185d3d!important}
+.checkbox-line{color:#4d6d56}
+.checkbox-line input{accent-color:#147b51}
+.readonly-values dt{color:#5f7964}
+.readonly-values dd{color:#284e35}
+.status-icon.ok{background:#e5f5e8;color:#0e8357}
+.badge-green,.stock-good{background:#e1f5e9;color:#107b52}
+.badge-muted{background:#edf2ed;color:#647f6b}
+.badge-orange,.stock-low{background:#fff2db;color:#a46c16}
+.badge-red,.stock-zero{background:#ffebed;color:#bc4050}
+.connection-pill{background:#e8f7ec;border-color:#c8e6d3;color:#157447}
+.flash{background:#ebf9ef;border-color:#c6e6d0;color:#0c764d}
+
+/* Ventanas y mensajes de la aplicación. */
+.modal-backdrop{background:#092b1eb3}
+.modal{border:1px solid #c8dfce;box-shadow:0 28px 72px #082f2070}
+.modal-head{border-bottom-color:#ddeadd}
+.modal-head h2{color:#155039}
+.modal-head p{color:#6b8774}
+.validation-checks{background:#f3f8f3}
+.toast{background:#0d4c34;box-shadow:0 14px 35px #072f2055}
+
+/* Identidad discreta y responsable: mantener visible quién usa el sistema. */
+.campus-chip .campus-dot{display:none}
+.campus-chip .campus-seal{filter:saturate(1.06)}
+.topbar-left .breadcrumb{font-weight:700}
+.page-intro .uaem-identity{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:12px;padding:5px 11px;
+  border:1px solid #d8e6d5;
+  border-radius:999px;
+  background:#f5f9f2;
+  color:#346347;
+  font-size:11px;font-weight:800;
+}
+.page-intro .uaem-identity::before{content:"";width:7px;height:7px;border-radius:50%;background:#d7a520}
+
+/* Responsive: se respeta el diseño móvil existente. */
+@media(max-width:780px){
+  .sidebar{box-shadow:15px 0 33px #0b39292b}
+  .brand-wrap{padding-bottom:34px}
+  .topbar{box-shadow:inset 0 -2px #f2d275}
+}
+@media(prefers-reduced-motion:reduce){
+  .nav-item,.btn{transition:none}
+}
