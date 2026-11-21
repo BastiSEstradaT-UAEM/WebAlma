@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=4">
   <link rel="stylesheet" href="/public/reportes-uaem-v1.css?v=2">
   <script src="/socket.io/socket.io.js" defer></script>
-  <script src="/public/panel.js?v=3" defer></script>
+  <script src="/public/panel.js?v=4" defer></script>
   <script src="/public/reportes-historial-v1.js?v=1" defer></script>
 </head>
 <body data-initial-section="<%= seccion || 'resumen' %>">
@@ -52,8 +52,10 @@
         <button type="button" data-nav="impresiones" class="nav-item"><svg class="ico"><use href="#i-print"/></svg><span>Copias e impresiones</span></button>
         <button type="button" data-nav="reportes" class="nav-item"><svg class="ico"><use href="#i-chart"/></svg><span>Reportes</span></button>
       </nav>
+      <% if (usuario.rol === 'administradora') { %>
       <div class="side-label side-label-second">ADMINISTRACIÓN</div>
       <nav class="nav"><button type="button" data-nav="configuracion" class="nav-item"><svg class="ico"><use href="#i-settings"/></svg><span>Configuración</span></button></nav>
+      <% } %>
       <div class="side-bottom">
         <div class="campus-chip"><img class="campus-seal" src="/public/escudo-uaem.webp" width="41" height="42" alt=""><div><strong>Papelería universitaria</strong><small>CU UAEM Valle de Chalco</small></div></div>
         <div class="side-profile"><div class="avatar"><%= usuario.rol === 'administradora' ? 'A' : 'X' %></div><div class="profile-name"><strong><%= usuario.nombre %></strong><small><%= usuario.rol === 'administradora' ? 'Cuenta propietaria' : 'Personal auxiliar' %></small></div>
@@ -89,7 +91,7 @@
               <% lowStock.slice(0,5).forEach(p => { %><div class="stock-line"><span class="stock-name"><%= p.producto %></span><div class="stock-line-right"><strong><%= p.stock %> uds.</strong><span class="badge <%= p.stock === 0 ? 'badge-red' : 'badge-orange' %>"><%= p.stock === 0 ? 'Sin stock' : 'Bajo' %></span></div></div><% }); %>
             </div></article>
           </div>
-          <div class="insight-strip"><div class="insight-icon"><svg class="ico"><use href="#i-clock"/></svg></div><div><strong>Aviso del establecimiento</strong><p><%= config.avisoHasta && new Date(config.avisoHasta).getTime() > Date.now() && config.aviso ? config.aviso : 'No hay avisos especiales vigentes.' %></p></div><button type="button" class="btn btn-quiet" data-go="configuracion">Ver configuración</button></div>
+          <div class="insight-strip"><div class="insight-icon"><svg class="ico"><use href="#i-clock"/></svg></div><div><strong>Aviso del establecimiento</strong><p><%= config.avisoHasta && new Date(config.avisoHasta).getTime() > Date.now() && config.aviso ? config.aviso : 'No hay avisos especiales vigentes.' %></p></div><% if (usuario.rol === 'administradora') { %><button type="button" class="btn btn-quiet" data-go="configuracion">Ver configuración</button><% } %></div>
         </section>
 
         <section class="view" id="view-inventario" data-view="inventario" hidden>
@@ -311,6 +313,7 @@
           <p class="helper-below">El importe registrado por impresión tampoco demuestra el cobro o la utilidad neta. Para calcular ganancias se requieren comprobantes de pago y costos reales de tinta, papel y operación.</p>
         </section>
 
+        <% if (usuario.rol === 'administradora') { %>
         <section class="view" id="view-configuracion" data-view="configuracion" hidden>
           <div class="page-intro"><div><div class="eyebrow">CONFIGURACIÓN DE LA PAPELERÍA</div><h1>Configuración</h1><p>Datos operativos y valores que deben validarse con la papelería.</p></div></div>
           <div class="two-column settings-layout"><article class="section-card pad-card"><div class="panel-head"><div><h2>Datos de la papelería</h2><p>Telegram muestra el menú solo durante el horario guardado. Las tarifas y los avisos vigentes se consultan desde PostgreSQL.</p></div></div>
@@ -382,6 +385,7 @@
           <article class="section-card pad-card"><div class="panel-head"><div><h2>Acerca del sistema WebAlma</h2><p>Alcance actual y tareas pendientes</p></div></div><div class="feature-status"><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Inventario conectado al bot de Telegram</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Pedidos instantáneos con Socket.io</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Registro de entradas y salidas PEPS</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Verificar existencias y precios físicos</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Recepción de archivos por Telegram y pagos verificados</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Sincronizar los precios y avisos de configuración con el bot</span></div></div><p class="hint">La auxiliar puede registrar impresiones y entregas; solo la propietaria puede agregar productos, cambiar precios o modificar existencias.</p></article>
           <% } %></div>
         </section>
+        <% } %>
       </main>
     </div>
   </div>
