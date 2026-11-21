@@ -46,7 +46,8 @@ async function getConfig() {
   if (!rows.length) throw new Error('Falta ejecutar sql/01_actualizacion_segura.sql');
   const r = rows[0];
   return {stockMinimo:num(r.stock_minimo),precioBN:num(r.precio_bn),precioColor:num(r.precio_color),
-    horario:r.horario,aviso:r.aviso,preciosValidados:r.precios_validados};
+    horario:r.horario,aviso:r.aviso,preciosValidados:r.precios_validados,
+    avisoHasta:r.aviso_hasta,horarioAvisoHasta:r.horario_aviso_hasta};
 }
 async function getOrders() {
   const { rows } = await query(`SELECT p.id, p.nombre_cliente, p.total, p.fecha,
@@ -220,8 +221,24 @@ async function registerPrint(tipo,cantidad,precio,observacion,usuarioId=null) {
   return query(`INSERT INTO public.impresiones(usuario_id,tipo,cantidad,precio_unitario,total,observacion)
     VALUES($1,$2,$3,$4,$5,$6)`,[usuarioId,tipo==='bn'?'blanco_negro':'color',cantidad,precio,Math.round(precio*cantidad*100)/100,observacion]);
 }
+// Las columnas nuevas son idempotentes; los avisos heredados quedan inactivos (NULL).
+async function ensureNoticeConfig() {
+  await query(`ALTER TABLE public.configuracion
+    ADD COLUMN IF NOT EXISTS aviso_hasta TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS horario_aviso_hasta TIMESTAMPTZ`);
+}
 async function saveConfig(v) {
-  await query(`UPDATE public.configuracion SET stock_minimo=$1,precio_bn=$2,precio_color=$3,horario=$4,aviso=$5,precios_validados=$6 WHERE id=1`,
+  // Solo un cambio real de horario o texto genera un nuevo aviso.
+  // Guardar precios, inventario o la misma configuración no reactiva avisos antiguos.
+  await query(`UPDATE public.configuracion SET
+    stock_minimo=$1,precio_bn=$2,precio_color=$3,
+    horario_aviso_hasta=CASE WHEN horario IS DISTINCT FROM $4::varchar
+      THEN NOW() + INTERVAL '24 hours' ELSE horario_aviso_hasta END,
+    aviso_hasta=CASE WHEN aviso IS DISTINCT FROM $5::varchar
+      THEN CASE WHEN BTRIM($5::text) = '' THEN NULL
+        ELSE NOW() + INTERVAL '24 hours' END
+      ELSE aviso_hasta END,
+    horario=$4,aviso=$5,precios_validados=$6 WHERE id=1`,
     [v.stockMinimo,v.precioBN,v.precioColor,v.horario,v.aviso,v.preciosValidados]);
 }
 
@@ -342,4 +359,4 @@ const telegramStore={
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
 module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,getReportActivity,getReportHistory,
-  createProduct,editProduct,archiveProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,listUsers,getActiveUser,createUser,updateUser,deactivateUser,PgSessionStore,telegramStore};
+  createProduct,editProduct,archiveProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureNoticeConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,listUsers,getActiveUser,createUser,updateUser,deactivateUser,PgSessionStore,telegramStore};
