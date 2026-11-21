@@ -71,7 +71,7 @@
           <div class="page-intro"><div><div class="eyebrow">RESUMEN DEL NEGOCIO</div><h1>Bienvenida a WebAlma <span class="wave">✦</span></h1><p>Consulta lo importante de la papelería desde un solo lugar.</p></div><button class="btn btn-primary" type="button" data-go="inventario"><svg class="ico"><use href="#i-box"/></svg> Administrar inventario</button></div>
           <div class="metric-grid">
             <article class="metric-card"><div class="metric-top"><span>Productos registrados</span><span class="metric-symbol symbol-blue"><svg class="ico"><use href="#i-box"/></svg></span></div><strong class="metric-number"><%= inventario.length.toLocaleString('es-MX') %></strong><div class="metric-foot">En PostgreSQL</div></article>
-            <article class="metric-card"><div class="metric-top"><span>Pedidos en espera</span><span class="metric-symbol symbol-orange"><svg class="ico"><use href="#i-bell"/></svg></span></div><strong class="metric-number" id="metricPending"><%= pedidosActivos.length %></strong><div class="metric-foot"><span class="badge badge-orange">Telegram</span> Actualización en vivo</div></article>
+            <article class="metric-card"><div class="metric-top"><span>Pedidos en gestión</span><span class="metric-symbol symbol-orange"><svg class="ico"><use href="#i-bell"/></svg></span></div><strong class="metric-number" id="metricPending"><%= pedidosActivos.length %></strong><div class="metric-foot"><span class="badge badge-orange">Telegram</span> Actualización en vivo</div></article>
             <article class="metric-card"><div class="metric-top"><span>Stock por revisar</span><span class="metric-symbol symbol-red"><svg class="ico"><use href="#i-alert"/></svg></span></div><strong class="metric-number"><%= lowStock.length %></strong><div class="metric-foot">Artículos en o bajo el mínimo</div></article>
             <article class="metric-card"><div class="metric-top"><span>Impresiones esta semana</span><span class="metric-symbol symbol-green"><svg class="ico"><use href="#i-print"/></svg></span></div><strong class="metric-number"><%= report.bn.hojas + report.color.hojas %></strong><div class="metric-foot">Hojas registradas en el panel</div></article>
           </div>
@@ -108,10 +108,51 @@
 
         <section class="view" id="view-pedidos" data-view="pedidos" hidden>
           <div class="page-intro"><div><div class="eyebrow">ATENCIÓN EN TIEMPO REAL</div><h1>Pedidos de Telegram</h1><p>Los pedidos nuevos aparecen automáticamente, sin recargar la página.</p></div><span class="connection-pill"><span class="live-dot"></span><span id="socketStatus">Conectando...</span></span></div>
-          <div class="section-card orders-panel"><div class="panel-head"><div><h2>Pendientes de entrega</h2><p>Confirma manualmente la entrega al estudiante.</p></div><span class="badge badge-orange" id="ordersCounter"><%= pedidosActivos.length %> pendientes</span></div>
+          <div class="section-card orders-panel"><div class="panel-head"><div><h2>Pedidos por revisar y entregar</h2><p>Acepta o rechaza nuevas solicitudes; marca como entregados los pedidos aceptados.</p></div><span class="badge badge-orange" id="ordersCounter"><%= pedidosActivos.length %> en gestión</span></div>
           <div class="orders-list" id="ordersList">
-            <% if (!pedidosActivos.length) { %><div class="empty-state" id="ordersEmpty"><div class="empty-icon"><svg class="ico"><use href="#i-bell"/></svg></div><strong>No hay pedidos en espera</strong><p>Cuando alguien confirme desde Telegram, aparecerá aquí.</p></div><% } %>
-            <% pedidosActivos.slice().reverse().forEach(p => { %><article class="order-card" data-order-id="<%= p.id %>"><div class="order-head"><div class="order-customer"><div class="mini-avatar"><%= String(p.cliente || 'E').slice(0,1).toUpperCase() %></div><div><strong><%= p.cliente %></strong><small><svg class="ico"><use href="#i-clock"/></svg> <%= p.hora || '—' %></small></div></div><span class="badge badge-orange">Por atender</span></div><div class="order-items"><% (Array.isArray(p.articulos) ? p.articulos : []).forEach(a => { %><div>• <%= a %></div><% }); %></div><% if(Array.isArray(p.documentos) && p.documentos.length){ %><div class="order-items" style="margin-top:10px"><strong>Documentos enviados por Telegram:</strong><% p.documentos.forEach(doc=>{ %><div><a href="/pedidos/<%= encodeURIComponent(p.id) %>/archivos/<%= encodeURIComponent(doc.id) %>/descargar">📄 Descargar PDF: <%= doc.nombre %></a></div><% }) %></div><% } %><div class="order-bottom"><div><small>Total cotizado</small><strong><%= fmx(p.total) %></strong></div><form method="post" action="/completar_pedido/<%= encodeURIComponent(p.id) %>"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" class="btn btn-success"><svg class="ico"><use href="#i-check"/></svg> Marcar entregado</button></form></div></article><% }); %>
+            <% if (!pedidosActivos.length) { %><div class="empty-state" id="ordersEmpty"><div class="empty-icon"><svg class="ico"><use href="#i-bell"/></svg></div><strong>No hay pedidos por atender</strong><p>Cuando alguien confirme desde Telegram, aparecerá aquí.</p></div><% } %>
+            <% pedidosActivos.slice().reverse().forEach(p => { %>
+              <article class="order-card" data-order-id="<%= p.id %>">
+                <div class="order-head">
+                  <div class="order-customer">
+                    <div class="mini-avatar"><%= String(p.cliente || 'E').slice(0,1).toUpperCase() %></div>
+                    <div><strong><%= p.cliente %></strong><small><svg class="ico"><use href="#i-clock"/></svg> <%= p.hora || '—' %> · Folio <%= p.id %></small></div>
+                  </div>
+                  <span class="badge order-state-badge <%= p.estado==='aceptado'?'badge-green':'badge-orange' %>"><%= p.estado==='aceptado'?'Aceptado':'Por aceptar' %></span>
+                </div>
+                <div class="order-items">
+                  <% (Array.isArray(p.articulos) ? p.articulos : []).forEach(a => { %><div>• <%= a %></div><% }); %>
+                </div>
+                <% if(Array.isArray(p.documentos) && p.documentos.length){ %>
+                  <div class="order-items order-documents">
+                    <strong>Documentos enviados por Telegram:</strong>
+                    <% p.documentos.forEach(doc=>{ %>
+                      <div><a href="/pedidos/<%= encodeURIComponent(p.id) %>/archivos/<%= encodeURIComponent(doc.id) %>/descargar">📄 Descargar PDF: <%= doc.nombre %></a></div>
+                    <% }) %>
+                  </div>
+                <% } %>
+                <div class="order-bottom">
+                  <div><small>Total cotizado</small><strong><%= fmx(p.total) %></strong></div>
+                  <div class="order-actions">
+                    <% if(p.estado==='aceptado'){ %>
+                      <form method="post" action="/completar_pedido/<%= encodeURIComponent(p.id) %>">
+                        <input type="hidden" name="_csrf" value="<%= csrf %>">
+                        <button type="submit" class="btn btn-success">✓ Marcar entregado</button>
+                      </form>
+                    <% } else { %>
+                      <form method="post" action="/pedidos/<%= encodeURIComponent(p.id) %>/aceptar">
+                        <input type="hidden" name="_csrf" value="<%= csrf %>">
+                        <button type="submit" class="btn btn-success">✓ Aceptar pedido</button>
+                      </form>
+                      <form method="post" action="/pedidos/<%= encodeURIComponent(p.id) %>/rechazar" data-confirm="¿Rechazar el pedido #<%= p.id %>? El estudiante recibirá una notificación.">
+                        <input type="hidden" name="_csrf" value="<%= csrf %>">
+                        <button type="submit" class="btn btn-reject">✕ Rechazar pedido</button>
+                      </form>
+                    <% } %>
+                  </div>
+                </div>
+              </article>
+            <% }); %>
           </div></div><p class="helper-below">Marcar un pedido como entregado no descuenta automáticamente inventario: el bot actual envía descripciones, no identificadores estructurados de productos.</p>
         </section>
 
