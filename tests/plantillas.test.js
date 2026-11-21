@@ -34,4 +34,19 @@ assert(aceptadoHTML.includes('action="/completar_pedido/55"'));
 assert(!aceptadoHTML.includes('action="/pedidos/55/rechazar"'));
 const login=ejs.render(fs.readFileSync(path.join(BASE,'views/login.ejs'),'utf8'),{error:false,csrf:'test'});
 assert(login.includes('login'));
+assert(login.includes('login-uaem'));
+assert(login.includes('Centro Universitario UAEM'));
+assert(login.includes('cuxi-papeleria.webp'));
+assert(login.includes('escudo-uaem.webp'));
+assert(login.includes('method="post"'));
+assert(login.includes('name="_csrf"'));
+assert(login.includes('autocomplete="username"'));
+assert(login.includes('autocomplete="current-password"'));
+const loginError=ejs.render(fs.readFileSync(path.join(BASE,'views/login.ejs'),'utf8'),{error:true,csrf:'test'});
+assert(loginError.includes('role="alert"'));
+for(const asset of ['cuxi-papeleria.webp','escudo-uaem.webp']) {
+  const filepath=path.join(BASE,'public',asset);
+  assert(fs.existsSync(filepath),`Falta recurso visual: ${asset}`);
+  assert(fs.statSync(filepath).size>1000,`Imagen vacía o dañada: ${asset}`);
+}
 console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
