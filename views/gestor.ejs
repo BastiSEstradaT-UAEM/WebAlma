@@ -57,7 +57,7 @@
       <nav class="nav"><button type="button" data-nav="configuracion" class="nav-item"><svg class="ico"><use href="#i-settings"/></svg><span>Configuración</span></button></nav>
       <% } %>
       <div class="side-bottom">
-        <div class="campus-chip"><img class="campus-seal" src="/public/escudo-uaem.webp" width="41" height="42" alt=""><div><strong>Papelería universitaria</strong><small>CU UAEM Valle de Chalco</small></div></div>
+        <div class="campus-chip"><img class="campus-seal" src="/public/escudo-uaem-nitido.svg" width="41" height="42" alt=""><div><strong>Papelería universitaria</strong><small>CU UAEM Valle de Chalco</small></div></div>
         <div class="side-profile"><div class="avatar"><%= usuario.rol === 'administradora' ? 'A' : 'X' %></div><div class="profile-name"><strong><%= usuario.nombre %></strong><small><%= usuario.rol === 'administradora' ? 'Cuenta propietaria' : 'Personal auxiliar' %></small></div>
           <form action="/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" class="logout-button" aria-label="Cerrar sesión" title="Cerrar sesión"><svg class="ico"><use href="#i-logout"/></svg></button></form>
         </div>
