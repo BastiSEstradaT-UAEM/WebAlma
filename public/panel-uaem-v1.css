@@ -314,3 +314,48 @@ body{background:#f5f8f3}
   .archive-product-form{margin:0 17px 17px;padding:14px;flex-direction:column;align-items:stretch}
   .archive-product-action{width:100%}
 }
+
+/* WebAlma · configuración de cuentas del personal */
+.staff-management{display:flex;flex-direction:column;gap:0}
+.staff-management .panel-head{margin-bottom:18px}
+.staff-section-title{font-size:12px;font-weight:800;color:#145239;margin-bottom:12px}
+.staff-existing-title{margin-top:24px;padding-top:21px;border-top:1px solid #e1ebdf}
+.staff-create-form{gap:13px}
+.staff-create-form .form-row{gap:10px}
+.staff-create-form .form-row .form-field{min-width:0}
+.staff-create-form .hint{margin:0;line-height:1.55}
+.staff-users{display:flex;flex-direction:column;gap:9px;max-height:520px;overflow-y:auto;padding-right:3px}
+.staff-account{background:#fff;border:1px solid #dce9df;border-radius:11px;overflow:hidden}
+.staff-account.is-inactive{background:#f7f9f7}
+.staff-account-main{display:flex;align-items:center;gap:10px;padding:12px}
+.staff-account-avatar{display:grid;place-items:center;width:35px;height:35px;flex:0 0 35px;border-radius:10px;background:#e2f3e9;color:#146849;font-weight:800}
+.staff-account-identity{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.staff-account-identity strong{color:#184c36;font-size:12px;overflow-wrap:anywhere}
+.staff-account-identity small{color:#71907b;font-size:11px;overflow-wrap:anywhere}
+.staff-account-status{font-size:10px;font-weight:800;flex:0 0 auto;padding:6px 8px;border-radius:7px}
+.staff-account-status.active{background:#e5f6e9;color:#11774e}
+.staff-account-status.disabled{background:#eff0ef;color:#778779}
+.staff-edit{border-top:1px solid #e8eee6}
+.staff-edit>summary{cursor:pointer;list-style:none;padding:11px 14px;font-size:11px;color:#106241;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.staff-edit>summary::-webkit-details-marker{display:none}
+.staff-edit>summary::after{content:"+";font-size:17px;font-weight:500}
+.staff-edit[open]>summary::after{content:"−"}
+.staff-edit>summary:hover{background:#f4faf5}
+.staff-edit-body{border-top:1px solid #e8eee6;padding:15px;background:#fcfefd}
+.staff-edit-body .stack-form{gap:12px}
+.staff-edit-body .btn-primary{align-self:flex-start}
+.staff-self-note{padding:10px 12px;background:#f3f8ee;color:#4b7255;border-radius:8px;font-size:11px}
+.staff-disable-form{border-top:1px solid #efdbdb;margin-top:16px;padding-top:14px}
+.staff-security-note{margin-top:16px;line-height:1.6;font-size:10px;color:#6d846f}
+.flash[data-flash="cuenta_datos_invalidos"],.flash[data-flash="usuario_duplicado"],
+.flash[data-flash="usuario_no_encontrado"],.flash[data-flash="ultimo_admin"],
+.flash[data-flash="auto_baja_prohibida"],.flash[data-flash="auto_cambio_prohibido"],
+.flash[data-flash="clave_actual_incorrecta"]{
+  color:#9b3d42;background:#fff0f1;border-color:#f0cbd0
+}
+@media(max-width:640px){
+  .staff-create-form .form-row{flex-direction:column}
+  .staff-account-main{flex-wrap:wrap}
+  .staff-account-status{margin-left:auto}
+  .staff-edit-body .btn-primary{width:100%}
+}
