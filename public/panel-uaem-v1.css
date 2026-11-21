@@ -245,3 +245,15 @@ body{background:#f5f8f3}
   }
   .mobile-menu-bar .ico{width:21px;height:21px}
 }
+
+/* Baja lógica de artículos: separada del botón de guardado para evitar borrados accidentales. */
+.archive-product-form{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  flex-wrap:wrap;padding:15px 27px 20px;
+  border-top:1px solid #f3d8d8;background:#fffafa;
+}
+.archive-product-form[hidden]{display:none!important}
+.archive-product-form p{display:flex;flex-direction:column;gap:5px;margin:0;flex:1 1 220px}
+.archive-product-form p strong{font-size:12px;color:#a8363e}
+.archive-product-form p span{font-size:11px;line-height:1.5;color:#795a5d}
+.archive-product-form .btn-reject{flex-shrink:0}
