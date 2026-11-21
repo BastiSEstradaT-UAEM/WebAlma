@@ -5,10 +5,10 @@ Las solicitudes enviadas desde Telegram se registran con estado `pendiente`. La 
 
 ## Migración previa y respaldos
 1. Respaldar PostgreSQL desde DBeaver y comprobar que el respaldo se puede recuperar.
-2. Ejecutar `sql/03_flujo_aprobacion_pedidos.sql` en `webalma_db`. El script no elimina registros ni productos; amplía la restricción `pedidos_estado_check` y conserva `cancelado`.
+2. La versión actual ejecuta automáticamente la migración idempotente de `migracion_estados.js` antes de abrir el servidor; `sql/03_flujo_aprobacion_pedidos.sql` permanece disponible para ejecución manual en DBeaver. El cambio no elimina registros ni productos y conserva `cancelado`.
 3. Consultar `SELECT estado, count(*) FROM public.pedidos GROUP BY estado;` y confirmar que no hubo cambios inesperados.
 
-**No publicar el código sin realizar antes la migración**, porque PostgreSQL rechazará el estado `aceptado` o `rechazado`.
+**No ejecutar la migración manual después de que la versión nueva ya la haya aplicado automáticamente sin comprobar antes la restricción.** Si falla la migración, el servidor no abrirá el puerto y se conservará el esquema anterior mediante `ROLLBACK`.
 
 ## Rutas del backend
 - `POST /pedidos/:id/aceptar`: `pendiente → aceptado`.
@@ -29,7 +29,7 @@ Se envía una notificación al identificador Telegram registrado con el pedido. 
 6. Confirmar que el cotizador PDF, la descarga de archivos, inventario y reportes continúan funcionando.
 
 ## Publicación
-Trabajar mediante rama y solicitud de cambios. Ejecutar `npm ci` y `npm run check`. Fusionar a `main` solo después de actualizar PostgreSQL. En Render, desplegar el último commit de `main` y comprobar `Live`, `/health` y el webhook.
+Trabajar mediante rama y solicitud de cambios. Ejecutar `npm ci` y `npm run check`. Fusionar a `main` tras las pruebas; al desplegarse, la aplicación actualizará PostgreSQL antes de aceptar conexiones. Verificar la restricción y probar el flujo de punta a punta. En Render, desplegar el último commit de `main` y comprobar `Live`, `/health` y el webhook.
 
 ## Reversión
 Antes de volver al backend anterior, revisar los pedidos que ya estén en estado `aceptado` o `rechazado`. **No restaurar la restricción anterior sin reconciliar esos estados**, o la migración de reversión fallará.
