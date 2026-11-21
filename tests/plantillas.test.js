@@ -17,6 +17,9 @@ const sampleReport=buildReportActivity(
 const data={inventario:sample,pedidosActivos:[],lowStock:sample,
   config:{stockMinimo:10,precioBN:1,precioColor:5,horario:'07:00 a 19:00',aviso:'',preciosValidados:false},
   usuario:{id:1,nombre:'Administración',rol:'administradora'},csrf:'test-csrf',
+   usuariosPersonal:[{id:1,nombre:'Administración',usuario:'admin',rol:'administradora',activo:true},
+     {id:2,nombre:'Auxiliar',usuario:'auxiliar1',rol:'auxiliar',activo:true},
+     {id:3,nombre:'Cuenta anterior',usuario:'inactiva',rol:'auxiliar',activo:false}],
   bounds:{start:'2026-11-16',end:'2026-11-22'},
   reporteActividad:sampleReport,
   report:{bn:{trabajos:0,hojas:0,ingresos:0},color:{trabajos:0,hojas:0,ingresos:0},total:0},
@@ -59,7 +62,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="openSidebar"'));
   assert(html.includes('id="closeSidebar"'));
   assert(html.includes('class="sidebar"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=2'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=3'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -71,6 +74,17 @@ for(const role of ['administradora','auxiliar']) {
   if(role==='administradora') {
     assert(html.includes('id="archiveProductForm"'));
     assert(html.includes('id="archiveProductBtn"'));
+    assert(html.includes('Usuarios y contraseñas'));
+    assert(html.includes('action="/configuracion/usuarios/crear"'));
+    assert(html.includes('action="/configuracion/usuarios/2/actualizar"'));
+    assert(html.includes('action="/configuracion/usuarios/2/desactivar"'));
+    assert(!html.includes('action="/configuracion/usuarios/1/desactivar"'));
+    assert(html.includes('Cuenta anterior'));
+    assert(html.includes('Inactiva'));
+    assert(html.includes('name="claveActual"'));
+    assert(!html.includes('name="password" value='));
+    assert(!html.includes('contrasena_hash'));
+
     assert(html.includes('class="archive-product-info"'));
     assert(html.includes('class="archive-product-copy"'));
     assert(html.includes('class="btn btn-reject archive-product-action"'));
@@ -82,6 +96,10 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('name="_csrf" value="test-csrf"'));
   } else {
     assert(!html.includes('id="newProductBtn"'));
+    assert(!html.includes('action="/configuracion/usuarios/crear"'));
+    assert(!html.includes('action="/configuracion/usuarios/2/actualizar"'));
+    assert(!html.includes('Usuarios y contraseñas'));
+
     assert(!html.includes('id="archiveProductForm"'));
     assert(!html.includes('id="archiveProductBtn"'));
   }
@@ -112,6 +130,15 @@ assert(panelScript.includes('archiveForm.hidden = true'));
 assert(panelScript.includes('archiveForm.hidden = false'));
 const dbSource=fs.readFileSync(path.join(BASE,'db.js'),'utf8');
 const serverSource=fs.readFileSync(path.join(BASE,'servidor_web.js'),'utf8');
+assert(serverSource.includes("app.post('/configuracion/usuarios/crear',auth,admin,csrf,async(req,res)=>{"));
+assert(serverSource.includes("app.post('/configuracion/usuarios/:id/actualizar',auth,admin,csrf,async(req,res)=>{"));
+assert(serverSource.includes("app.post('/configuracion/usuarios/:id/desactivar',auth,admin,csrf,async(req,res)=>{"));
+assert(serverSource.includes("db.getActiveUser(req.session.usuario.id)"));
+assert(dbSource.includes('UPDATE public.usuarios SET activo=FALSE WHERE id=$1'));
+assert(dbSource.includes("DELETE FROM public.web_sessions WHERE sess->'usuario'->>'id'=$1::text"));
+assert(dbSource.includes('if(existing.rows.length)return;'));
+assert(!dbSource.includes('DELETE FROM public.usuarios'));
+
 assert(dbSource.includes('UPDATE public.productos SET activo=FALSE WHERE id=$1 AND activo=TRUE RETURNING id'));
 assert(!dbSource.includes('DELETE FROM public.productos'));
 assert(dbSource.includes('WHERE p.activo = TRUE ORDER BY p.id'));

@@ -9,6 +9,7 @@ const {Readable}=require('node:stream');
 const {Server}=require('socket.io');
 const db=require('./db');
 const {createBot}=require('./bot');
+const {validarCuenta}=require('./cuentas');
 const {asegurarEstadosPedido}=require('./migracion_estados');
 const {procesarEstadoPedido}=require('./pedidos_estado');
 
@@ -33,12 +34,29 @@ app.use((req,res,next)=>{req.session.csrf??=crypto.randomBytes(24).toString('hex
 const server=http.createServer(app);
 const io=new Server(server);
 io.engine.use(sessionMiddleware);
-io.use((socket,next)=>socket.request.session?.usuario?next():next(new Error('No autorizado')));
+io.use((socket,next)=>{
+  const id=socket.request.session?.usuario?.id;
+  db.getActiveUser(id).then(user=>user?next():next(new Error('No autorizado'))).catch(next);
+});
+function desconectarUsuario(id){
+  for(const socket of io.sockets.sockets.values()){
+    if(Number(socket.request.session?.usuario?.id)===Number(id))socket.disconnect(true);
+  }
+}
 const clean=(v,max=200)=>String(v??'').trim().slice(0,max);
 const money=v=>{const n=Number(v);return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:null;};
 const nonnegInt=v=>{const n=Number(v);return Number.isSafeInteger(n)&&n>=0?n:null;};
 function same(a,b){const x=crypto.createHash('sha256').update(String(a)).digest();const y=crypto.createHash('sha256').update(String(b)).digest();return crypto.timingSafeEqual(x,y);}
-function auth(req,res,next){if(req.session.usuario)return next();res.redirect('/');}
+async function auth(req,res,next){
+  if(!req.session.usuario)return res.redirect('/');
+  try{
+    const fresh=await db.getActiveUser(req.session.usuario.id);
+    if(!fresh)return req.session.destroy(()=>res.redirect('/'));
+    req.session.usuario=fresh;
+    res.set('Cache-Control','private, no-store');
+    next();
+  }catch(e){next(e);}
+}
 function admin(req,res,next){if(req.session.usuario?.rol==='administradora')return next();res.status(403).send('Acceso reservado a la propietaria.');}
 function csrf(req,res,next){const a=String(req.body._csrf||''),b=String(req.session.csrf||'');
   if(!a||a.length!==b.length||!same(a,b))return res.status(403).send('Formulario vencido o inválido.');next();}
@@ -60,6 +78,17 @@ const RESULT_MESSAGES=Object.freeze({
   pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',
   pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',
   configuracion_guardada:'Configuración guardada correctamente.',
+  usuario_creado:'Cuenta de acceso creada correctamente.',
+  usuario_actualizado:'Los datos de acceso se actualizaron. Las sesiones anteriores se cerraron.',
+  usuario_eliminado:'Cuenta desactivada. No podrá volver a iniciar sesión.',
+  usuario_duplicado:'Ese nombre de usuario ya existe; elige otro.',
+  usuario_no_encontrado:'La cuenta ya no está activa o no existe.',
+  clave_actual_incorrecta:'La contraseña actual de la administradora no coincide.',
+  auto_cambio_prohibido:'No puedes cambiar tu propia cuenta a auxiliar.',
+  auto_baja_prohibida:'No puedes desactivar la cuenta con la que has iniciado sesión.',
+  ultimo_admin:'Debe quedar al menos una cuenta administradora activa.',
+  cuenta_datos_invalidos:'Revisa los datos de la cuenta. Usuario: 3 a 32 caracteres (letras, números, punto, guion). Contraseña nueva: mínimo 12 caracteres.',
+
   datos_invalidos:'Revisa los datos del formulario.',
   movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',
   lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',
@@ -93,10 +122,10 @@ app.post('/login',csrf,async(req,res)=>{
 });
 app.post('/logout',auth,csrf,(req,res)=>req.session.destroy(()=>res.redirect('/')));
 app.get('/gestor',auth,async(req,res)=>{
-  const [inventario,pedidosActivos,impresiones,config]=await Promise.all([db.getInventory(),db.getOrders(),db.getImpressions(),db.getConfig()]);
+  const [inventario,pedidosActivos,impresiones,config,usuariosPersonal]=await Promise.all([db.getInventory(),db.getOrders(),db.getImpressions(),db.getConfig(),req.session.usuario.rol==='administradora'?db.listUsers():Promise.resolve([])]);
   const bounds=weekBounds();const lowStock=inventario.filter(x=>x.stock<=(x.stock_minimo_sugerido??config.stockMinimo));
   const reporteActividad=await db.getReportActivity(bounds,todayMX());
-  res.render('gestor',{inventario,pedidosActivos,lowStock,config,reporteActividad,usuario:req.session.usuario,
+  res.render('gestor',{inventario,pedidosActivos,lowStock,config,reporteActividad,usuariosPersonal,usuario:req.session.usuario,
     csrf:req.session.csrf,bounds,report:report(impresiones,bounds),recientes:impresiones.slice(-8).reverse(),
     totalUnidades:inventario.reduce((s,p)=>s+p.stock,0),
     valorEstimado:inventario.reduce((s,p)=>s+p.precio*p.stock,0),
@@ -239,6 +268,32 @@ app.get('/reportes/mensual.csv',auth,async(req,res)=>{
   const end=new Date(Date.UTC(Number(mes.slice(0,4)),Number(mes.slice(5,7)),0)).toISOString().slice(0,10);
   const data=report(await db.getImpressions(),{start:mes+'-01',end});
   res.type('text/csv; charset=utf-8').set('Content-Disposition',`attachment; filename="reporte_mensual_${mes}.csv"`).send(csvReport(data));
+});
+// Gestión de cuentas: restringida a administradora, protegida por CSRF, sin eliminar historial.
+const userId=v=>{const n=Number(v);return /^[1-9]\d*$/.test(String(v))&&Number.isSafeInteger(n)?n:null;};
+app.post('/configuracion/usuarios/crear',auth,admin,csrf,async(req,res)=>{
+  const values=validarCuenta(req.body,{exigirPassword:true});
+  if(values.error)return go(res,'cuenta_datos_invalidos','configuracion');
+  const result=await db.createUser(values);
+  go(res,result.code==='ok'?'usuario_creado':result.code,'configuracion');
+});
+app.post('/configuracion/usuarios/:id/actualizar',auth,admin,csrf,async(req,res)=>{
+  const id=userId(req.params.id);
+  const values=validarCuenta(req.body,{exigirPassword:false});
+  if(!id||values.error)return go(res,'cuenta_datos_invalidos','configuracion');
+  const result=await db.updateUser(id,values,req.session.usuario.id,String(req.body.claveActual||''));
+  if(result.code!=='ok')return go(res,result.code,'configuracion');
+  desconectarUsuario(id);
+  if(result.own)return req.session.destroy(()=>res.redirect('/'));
+  go(res,'usuario_actualizado','configuracion');
+});
+app.post('/configuracion/usuarios/:id/desactivar',auth,admin,csrf,async(req,res)=>{
+  const id=userId(req.params.id);
+  if(!id)return go(res,'cuenta_datos_invalidos','configuracion');
+  const result=await db.deactivateUser(id,req.session.usuario.id);
+  if(result.code!=='ok')return go(res,result.code,'configuracion');
+  desconectarUsuario(id);
+  go(res,'usuario_eliminado','configuracion');
 });
 app.post('/configuracion/guardar',auth,admin,csrf,async(req,res)=>{
   const values={stockMinimo:nonnegInt(req.body.stockMinimo),precioBN:money(req.body.precioBN),precioColor:money(req.body.precioColor),

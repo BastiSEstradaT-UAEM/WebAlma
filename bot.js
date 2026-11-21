@@ -8,6 +8,7 @@ const kb=rows=>Markup.inlineKeyboard(rows.map(row=>row.map(([label,id])=>Markup.
 const inicio=()=>kb([
   [['📚 Ver productos','productos'],['🖨 Cotizar impresiones','impresiones']],
   [['📄 Cotizar PDF','pdf_inicio'],['🛒 Mi carrito','carrito']],
+  [['🕒 Horarios y avisos','informacion'],['💰 Tarifas','tarifas']],
   [['✅ Finalizar pedido','checkout'],['ℹ️ Ayuda','ayuda']]
 ]);
 const seguir=()=>kb([[['📚 Productos','productos'],['📄 PDF','pdf_inicio']],[['🛒 Mi carrito','carrito'],['✅ Finalizar','checkout']]]);
@@ -18,12 +19,43 @@ function createBot(onOrder){
   bot.use(session({store:db.telegramStore}));
   bot.use((ctx,next)=>{ctx.session??={};ctx.session.carrito??=[];return next();});
   bot.catch((err,ctx)=>{console.error('Telegram: error en actualización',ctx.updateType,err.code||err.name);});
-  async function menu(ctx){return ctx.reply('📘 *WebAlma*\nTe ayudo a consultar artículos y cotizar impresiones. ¿Qué deseas hacer?',{parse_mode:'Markdown',...inicio()});}
+  // Cada entrada al menú lee PostgreSQL. No se almacena en caché la configuración pública.
+  function informacionPublica(cfg){
+    const horario=String(cfg.horario||'Por confirmar');
+    const aviso=String(cfg.aviso||'').trim();
+    return '🕒 Horario de la papelería: '+horario+
+      (aviso?'\n📢 Aviso del establecimiento: '+aviso:'\n📢 Sin avisos especiales.');
+  }
+  function tarifasPublicas(cfg){
+    const leyenda=cfg.preciosValidados?'Tarifas confirmadas por la papelería.':'Tarifas estimadas, sujetas a confirmación.';
+    return '🖨️ Tarifas por cara impresa\n• Blanco y negro: '+pesos(cfg.precioBN)+
+      '\n• A color: '+pesos(cfg.precioColor)+'\n'+leyenda;
+  }
+  async function menu(ctx){
+    const cfg=await db.getConfig();
+    return ctx.reply('📘 WebAlma · Papelería universitaria UAEM Valle de Chalco\n'+
+      'Consulta productos, cotiza tus impresiones o envía un PDF.\n\n'+
+      informacionPublica(cfg)+'\n\n'+tarifasPublicas(cfg)+'\n\n¿Qué deseas hacer?',inicio());
+  }
   async function enter(ctx){await ctx.answerCbQuery().catch(()=>{});}
   bot.start(menu);
   bot.hears(/^(hola|men[uú]|inicio)$/i,menu);
+  async function mostrarInformacion(ctx){
+    const cfg=await db.getConfig();
+    return ctx.reply(informacionPublica(cfg)+'\n\nPara un pedido, espera la confirmación del personal.',inicio());
+  }
+  async function mostrarTarifas(ctx){
+    const cfg=await db.getConfig();
+    return ctx.reply(tarifasPublicas(cfg),inicio());
+  }
+  bot.command('horario',mostrarInformacion);
+  bot.command('precios',mostrarTarifas);
+  bot.hears(/^(horario|horarios|horario de atenci[oó]n|aviso|avisos)$/i,mostrarInformacion);
+  bot.hears(/^(tarifas|precios de impresi[oó]n)$/i,mostrarTarifas);
+  bot.action('informacion',async ctx=>{await enter(ctx);return mostrarInformacion(ctx);});
+  bot.action('tarifas',async ctx=>{await enter(ctx);return mostrarTarifas(ctx);});
   bot.action('inicio',async ctx=>{await enter(ctx);ctx.session.pdfPendiente=null;ctx.session.esperando=null;return menu(ctx);});
-  bot.action('ayuda',async ctx=>{await enter(ctx);return ctx.reply('Usa los botones para ver productos o enviar un PDF. También puedes escribir «2 plumas» o «5 impresiones a color». Los precios son estimados hasta validación en mostrador.',inicio());});
+  bot.action('ayuda',async ctx=>{await enter(ctx);return ctx.reply('Usa los botones para ver productos o enviar un PDF. También puedes escribir «2 plumas» o «5 impresiones a color». Consulta los horarios y avisos desde el menú. La papelería confirma las solicitudes en mostrador.',inicio());});
   bot.action('impresiones',async ctx=>{await enter(ctx);return ctx.reply('🖨️ Para cotizar impresiones sin archivo, escribe por ejemplo:\n• 5 impresiones a color\n• 10 impresiones blanco y negro\n\nPara cotizar un documento completo, selecciona PDF.',kb([[['📄 Enviar PDF','pdf_inicio']],[['⬅️ Menú','inicio']]]));});
   bot.action('pdf_inicio',async ctx=>{await enter(ctx);return ctx.reply('📄 Envíame tu archivo *PDF como documento* por este chat privado. Detectaré el número de páginas y el tamaño; luego elegirás color, copias y doble cara.\n\nLímite de demostración: 8 MB y 200 páginas. Evita documentos con datos sensibles.',{parse_mode:'Markdown',...kb([[['⬅️ Menú','inicio']]])});});
 
