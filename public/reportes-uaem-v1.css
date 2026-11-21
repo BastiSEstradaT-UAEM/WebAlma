@@ -9,8 +9,6 @@
 .report-kpi>strong{font-family:'Plus Jakarta Sans',sans-serif;font-size:31px;line-height:1.2;color:#0c4934;letter-spacing:-.04em}
 .report-kpi>strong.report-kpi-money{font-size:25px}
 .report-kpi>small{font-size:10px;color:#6e8b73;line-height:1.5}
-.report-disclaimer{display:flex;gap:9px;align-items:flex-start;line-height:1.65;color:#79622a;background:#fff9e8;border:1px solid #ecdba4;border-radius:10px;padding:12px 15px;font-size:11px;margin:0 0 20px}
-.report-disclaimer .ico{color:#bb8a21;width:17px;height:17px;flex:0 0 17px;margin-top:1px}
 .report-visual-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:17px;margin:0 0 19px}
 .report-visual-card{padding:22px 24px;min-height:335px}
 .report-visual-card .panel-head{min-height:45px;margin-bottom:16px}
@@ -64,3 +62,16 @@
 @media(max-width:1150px){.report-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.report-visual-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.report-kpi-grid{gap:10px}.report-kpi{padding:14px 13px}.report-kpi>strong{font-size:25px}.report-kpi>strong.report-kpi-money{font-size:19px}.report-kpi-label{font-size:10px}.report-kpi>small{font-size:10px}.report-visual-card,.report-history{padding:16px}.report-visual-card{min-height:310px}.report-bars{gap:5px}.report-day-label{font-size:10px}.report-history-filters .form-field{flex-basis:130px;max-width:none}.report-history-filters .btn{flex:1}.report-subheading .btn{width:100%}}
 @media(prefers-reduced-motion:reduce){.report-bar-fill,.report-state-fill{transition:none}}
+/* Historial consultable bajo demanda; permanece oculto hasta presionar Ver. */
+.report-history-results[hidden],.report-history-hint[hidden],
+#reportHistoryTableWrap[hidden],#reportNoMatches[hidden]{display:none!important}
+.report-history-filters{margin-bottom:9px}
+.report-history-filters .btn{min-width:105px}
+.report-history-hint{margin:15px 0 0;padding:14px 16px;font-size:12px;color:#557461;border:1px dashed #d5e4d7;background:#f8fbf7;border-radius:10px;line-height:1.6}
+.report-history-results{margin-top:18px}
+.report-history-summary{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.report-history-summary strong{color:#155c3f;font-size:12px;font-weight:800}
+.report-history-summary small{color:#778b7c;font-size:11px}
+.report-history-no-results{padding:24px;text-align:center;border-radius:10px;background:#f6faf5;color:#67816c;font-size:12px}
+.report-history-foot{padding-top:13px;font-size:10px;color:#829588}
+@media(max-width:600px){.report-history-filters .btn{flex:1 1 100%;margin-top:4px}.report-history-results{margin-top:12px}}

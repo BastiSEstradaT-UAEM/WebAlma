@@ -30,37 +30,6 @@
   const today = $('#todayDate');
   if (today) today.textContent = new Intl.DateTimeFormat('es-MX',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Mexico_City'}).format(new Date());
 
-  // Los pedidos cerrados siguen en PostgreSQL: filtros del historial sin exponer datos privados.
-  const reportDate=$('#reportDateFilter');
-  const reportStatus=$('#reportStatusFilter');
-  const reportRows=$('[data-report-date][data-report-status]');
-  const applyReportFilters=()=>{
-    if(!reportDate||!reportStatus)return;
-    let visible=0;
-    for(const row of reportRows){
-      const matchDate=!reportDate.value||row.dataset.reportDate===reportDate.value;
-      const matchStatus=!reportStatus.value||row.dataset.reportStatus===reportStatus.value;
-      row.hidden=!(matchDate&&matchStatus);
-      if(!row.hidden)visible++;
-    }
-    const counter=$('#reportVisibleCount');
-    if(counter)counter.textContent=visible+' visibles';
-    const empty=$('#reportNoMatches');
-    if(empty)empty.hidden=visible>0;
-  };
-  reportDate?.addEventListener('change',applyReportFilters);
-  reportStatus?.addEventListener('change',applyReportFilters);
-  $('#reportToday')?.addEventListener('click',()=>{
-    if(reportDate){reportDate.value=reportDate.max;applyReportFilters();}
-  });
-  $('#reportClear')?.addEventListener('click',()=>{
-    if(reportDate)reportDate.value='';
-    if(reportStatus)reportStatus.value='';
-    applyReportFilters();
-  });
-  $('#refreshReports')?.addEventListener('click',()=>location.reload());
-  applyReportFilters();
-
   const flash = $('[data-flash]');
   const messages = {producto_agregado:'Producto agregado al catálogo.',producto_actualizado:'Producto actualizado correctamente.',movimiento_registrado:'Movimiento de inventario registrado.',impresion_registrada:'Servicio de impresión registrado.',pedido_entregado:'Pedido marcado como entregado.',pedido_aceptado:'Pedido aceptado. Se notificó al estudiante por Telegram.',pedido_rechazado:'Pedido rechazado. Se notificó al estudiante por Telegram.',pedido_aceptado_sin_aviso:'Pedido aceptado, pero Telegram no pudo entregar el aviso.',pedido_rechazado_sin_aviso:'Pedido rechazado, pero Telegram no pudo entregar el aviso.',pedido_entregado_sin_aviso:'Pedido entregado; no se pudo enviar aviso por Telegram.',pedido_aceptado_sin_destinatario:'Pedido aceptado; no hay cuenta de Telegram asociada.',pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',configuracion_guardada:'Configuración guardada.',datos_invalidos:'Revisa los datos del formulario.',movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',pedido_no_encontrado:'El pedido ya no está pendiente.'};
   if (flash) flash.textContent = messages[flash.dataset.flash] || 'Operación terminada.';
