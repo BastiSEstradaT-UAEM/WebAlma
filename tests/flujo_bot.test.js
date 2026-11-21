@@ -23,7 +23,7 @@ const bot=createBot(async pedido=>{registrado=pedido;return {id:'17'}});
 bot.botInfo={id:123456,is_bot:true,first_name:'WebAlma',username:'testWebAlmaBot'};
 const requests=[];const {Telegram}=require(path.join(path.dirname(require.resolve('telegraf')),'telegram.js'));Telegram.prototype.callApi=async function(method,payload){requests.push({method,payload});return method==='sendMessage'?{message_id:66,chat:{id:42,type:'private'},text:payload.text}:true};
 let n=1;const from={id:42,is_bot:false,first_name:'Basti'};const chat={id:42,type:'private'};
-async function msg(text){const entities=text.startsWith('/')?[{type:'bot_command',offset:0,length:text.split(/\\s/)[0].length}]:undefined;await bot.handleUpdate({update_id:n++,message:{message_id:n,date:1,from,chat,text,entities}});}
+async function msg(text){const entities=text.startsWith('/')?[{type:'bot_command',offset:0,length:text.trim().split(' ')[0].length}]:undefined;await bot.handleUpdate({update_id:n++,message:{message_id:n,date:1,from,chat,text,entities}});}
 async function cb(data){await bot.handleUpdate({update_id:n++,callback_query:{id:String(n),from,message:{message_id:66,date:1,chat},chat_instance:'xyz',data}});}
 async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n,date:1,from,chat,document:{file_id:'ABCD_1234',file_name:'Tarea.pdf',mime_type:'application/pdf',file_size:500}}});}
 (async()=>{
