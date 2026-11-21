@@ -50,7 +50,7 @@
         <button type="button" data-nav="inventario" class="nav-item"><svg class="ico"><use href="#i-box"/></svg><span>Inventario</span><span class="nav-count"><%= inventario.length %></span></button>
         <button type="button" data-nav="pedidos" class="nav-item"><svg class="ico"><use href="#i-bell"/></svg><span>Pedidos de Telegram</span><span class="nav-count" id="navOrderCount"><%= pedidosActivos.length %></span></button>
         <button type="button" data-nav="impresiones" class="nav-item"><svg class="ico"><use href="#i-print"/></svg><span>Copias e impresiones</span></button>
-        <button type="button" data-nav="reportes" class="nav-item"><svg class="ico"><use href="#i-chart"/></svg><span>Reportes</span></button>
+        <% if (usuario.rol === 'administradora') { %><button type="button" data-nav="reportes" class="nav-item"><svg class="ico"><use href="#i-chart"/></svg><span>Reportes</span></button><% } %>
       </nav>
       <% if (usuario.rol === 'administradora') { %>
       <div class="side-label side-label-second">ADMINISTRACIÓN</div>
@@ -95,20 +95,22 @@
         </section>
 
         <section class="view" id="view-inventario" data-view="inventario" hidden>
-          <div class="page-intro"><div><div class="eyebrow">CONTROL DE PRODUCTOS</div><h1>Inventario general</h1><p>Consulta, filtra y actualiza los artículos de la papelería.</p></div><% if (usuario.rol === 'administradora') { %><button type="button" class="btn btn-primary" id="newProductBtn"><svg class="ico"><use href="#i-plus"/></svg> Nuevo producto</button><% } %></div>
+          <div class="page-intro"><div><div class="eyebrow">CONTROL DE PRODUCTOS</div><h1>Inventario general</h1><p><%= usuario.rol === 'administradora' ? 'Consulta, filtra y actualiza los artículos de la papelería.' : 'Consulta los productos, precios y existencias de la papelería.' %></p></div><% if (usuario.rol === 'administradora') { %><button type="button" class="btn btn-primary" id="newProductBtn"><svg class="ico"><use href="#i-plus"/></svg> Nuevo producto</button><% } %></div>
           <div class="section-card inventory-card">
-            <div class="inventory-toolbar"><label class="search-field"><svg class="ico"><use href="#i-search"/></svg><input id="inventorySearch" type="search" placeholder="Buscar por nombre, ID o categoría..." autocomplete="off"></label><select id="categoryFilter" aria-label="Filtrar por categoría"><option value="">Todas las categorías</option><% categorias.forEach(c => { %><option value="<%= c %>"><%= c %></option><% }) %></select><select id="stockFilter" aria-label="Filtrar por stock"><option value="">Todas las existencias</option><option value="low">Stock bajo</option><option value="empty">Sin existencias</option><option value="unverified">Por validar</option></select></div>
-            <div class="table-scroll"><table class="data-table" id="inventoryTable"><thead><tr><th>ID</th><th>Producto / categoría</th><th>Precio</th><th>Disponibilidad</th><th>Estado</th><th class="align-right">Acciones</th></tr></thead><tbody>
+            <div class="inventory-toolbar"><label class="search-field"><svg class="ico"><use href="#i-search"/></svg><input id="inventorySearch" type="search" placeholder="Buscar por nombre, ID o categoría..." autocomplete="off"></label><select id="categoryFilter" aria-label="Filtrar por categoría"><option value="">Todas las categorías</option><% categorias.forEach(c => { %><option value="<%= c %>"><%= c %></option><% }) %></select><select id="stockFilter" aria-label="Filtrar por stock"><option value="">Todas las existencias</option><option value="low">Stock bajo</option><option value="empty">Sin existencias</option><% if (usuario.rol === 'administradora') { %><option value="unverified">Por validar</option><% } %></select></div>
+            <div class="table-scroll"><table class="data-table" id="inventoryTable"><thead><tr><th>ID</th><th>Producto / categoría</th><th>Precio</th><th>Disponibilidad</th><% if (usuario.rol === 'administradora') { %><th>Estado</th><th class="align-right">Acciones</th><% } %></tr></thead><tbody>
               <% inventario.forEach(p => { const min = p.stock_minimo_sugerido == null ? config.stockMinimo : Number(p.stock_minimo_sugerido); const isLow = Number(p.stock) <= min; const verified = p.existencia_confirmada === true && p.precio_confirmado === true; %>
               <tr data-product-row data-search="<%= (p.id+' '+p.producto+' '+(p.categoria||'')).toLowerCase() %>" data-category="<%= p.categoria %>" data-low="<%= isLow %>" data-empty="<%= Number(p.stock) === 0 %>" data-unverified="<%= !verified %>">
                 <td class="cell-id">#<%= p.id %></td><td><strong class="product-title"><%= p.producto %></strong><span class="product-category"><%= p.categoria || 'Otros' %></span></td>
                 <td class="price-cell"><%= fmx(p.precio) %></td>
                 <td><span class="stock-pill <%= Number(p.stock) === 0 ? 'stock-zero' : isLow ? 'stock-low' : 'stock-good' %>"><span class="pill-dot"></span><%= p.stock %> uds.</span></td>
+                <% if (usuario.rol === 'administradora') { %>
                 <td><span class="badge <%= verified ? 'badge-green' : 'badge-muted' %>"><%= verified ? 'Verificado' : 'Por validar' %></span></td>
-                <td class="align-right actions-cell"><% if (usuario.rol === 'administradora') { %><button type="button" class="table-action movement-btn" title="Registrar entrada o salida" data-id="<%= p.id %>" data-name="<%= p.producto %>" data-stock="<%= p.stock %>"><svg class="ico"><use href="#i-box"/></svg><span>Movimiento</span></button><button type="button" class="table-action edit-btn" title="Editar producto" data-id="<%= p.id %>" data-name="<%= p.producto %>" data-category="<%= p.categoria %>" data-price="<%= p.precio %>" data-minimum="<%= min %>" data-existence="<%= p.existencia_confirmada === true %>" data-price-verified="<%= p.precio_confirmado === true %>"><svg class="ico"><use href="#i-edit"/></svg><span>Editar</span></button><% } %></td>
+                <td class="align-right actions-cell"><button type="button" class="table-action movement-btn" title="Registrar entrada o salida" data-id="<%= p.id %>" data-name="<%= p.producto %>" data-stock="<%= p.stock %>"><svg class="ico"><use href="#i-box"/></svg><span>Movimiento</span></button><button type="button" class="table-action edit-btn" title="Editar producto" data-id="<%= p.id %>" data-name="<%= p.producto %>" data-category="<%= p.categoria %>" data-price="<%= p.precio %>" data-minimum="<%= min %>" data-existence="<%= p.existencia_confirmada === true %>" data-price-verified="<%= p.precio_confirmado === true %>"><svg class="ico"><use href="#i-edit"/></svg><span>Editar</span></button></td>
+                <% } %>
               </tr><% }); %>
             </tbody></table></div>
-            <div class="table-footer"><span id="inventoryCounter">Mostrando <%= inventario.length %> de <%= inventario.length %> productos</span><span>Verificado = precio y existencias confirmados; movimientos registrados por lote PEPS</span></div>
+            <div class="table-footer"><span id="inventoryCounter">Mostrando <%= inventario.length %> de <%= inventario.length %> productos</span><% if (usuario.rol === 'administradora') { %><span>Verificado = precio y existencias confirmados; movimientos registrados por lote PEPS</span><% } %></div>
           </div>
         </section>
 
@@ -171,6 +173,7 @@
           </div>
         </section>
 
+        <% if (usuario.rol === 'administradora') { %>
         <section class="view" id="view-reportes" data-view="reportes" hidden>
           <div class="page-intro">
             <div>
@@ -313,6 +316,7 @@
           <p class="helper-below">El importe registrado por impresión tampoco demuestra el cobro o la utilidad neta. Para calcular ganancias se requieren comprobantes de pago y costos reales de tinta, papel y operación.</p>
         </section>
 
+        <% } %>
         <% if (usuario.rol === 'administradora') { %>
         <section class="view" id="view-configuracion" data-view="configuracion" hidden>
           <div class="page-intro"><div><div class="eyebrow">CONFIGURACIÓN DE LA PAPELERÍA</div><h1>Configuración</h1><p>Datos operativos y valores que deben validarse con la papelería.</p></div></div>
