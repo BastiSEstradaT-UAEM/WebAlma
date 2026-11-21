@@ -7,7 +7,7 @@
   "main": "servidor_web.js",
   "scripts": {
     "start": "node servidor_web.js",
-    "check": "node --check servidor_web.js && node --check bot.js && node --check db.js && node --check cuentas.js && node tests/cuentas.test.js && node --check public/panel.js && node tests/plantillas.test.js && node --check pdf_cotizador.js && node tests/pdf_cotizador.test.js && node tests/flujo_bot.test.js && node tests/estados_pedidos.test.js && node --check migracion_estados.js && node tests/migracion_pedidos.test.js && node --check reportes_actividad.js && node tests/reportes_actividad.test.js && node --check public/reportes-historial-v1.js && node tests/reportes_historial.test.js"
+    "check": "node --check servidor_web.js && node --check bot.js && node --check db.js && node --check cuentas.js && node tests/cuentas.test.js && node --check horario_atencion.js && node tests/horario_atencion.test.js && node --check public/panel.js && node tests/plantillas.test.js && node --check pdf_cotizador.js && node tests/pdf_cotizador.test.js && node tests/flujo_bot.test.js && node tests/estados_pedidos.test.js && node --check migracion_estados.js && node tests/migracion_pedidos.test.js && node --check reportes_actividad.js && node tests/reportes_actividad.test.js && node --check public/reportes-historial-v1.js && node tests/reportes_historial.test.js"
   },
   "engines": {
     "node": ">=20"
