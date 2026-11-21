@@ -35,15 +35,16 @@ for(const role of ['administradora','auxiliar']) {
   assert(!html.includes('Confirmen los datos físicos con la propietaria'));
   assert(!html.includes('class="notice-bar"'));
   assert(html.includes('Stock por revisar'));
-  assert(html.includes('id="reportHistoryFilter"'));
-  assert(html.includes('Corte mensual'));
-  assert(html.includes('Pedidos de la semana'));
-  assert(html.includes('Estado de los pedidos'));
-  assert(html.includes('Historial de pedidos</h2>'));
-  assert(html.includes('id="reportHistoryFilter"'));
-  assert(html.includes('id="reportHistoryResults" class="report-history-results" hidden'));
-  assert(html.includes('id="reportHistoryBody"></tbody>'));
-  assert(html.includes('id="reportView" type="submit" class="btn btn-primary">Ver</button>'));
+  if(role==='administradora'){
+    assert(html.includes('id="reportHistoryFilter"'));
+    assert(html.includes('Corte mensual'));
+    assert(html.includes('Pedidos de la semana'));
+    assert(html.includes('Estado de los pedidos'));
+    assert(html.includes('Historial de pedidos</h2>'));
+    assert(html.includes('id="reportHistoryResults" class="report-history-results" hidden'));
+    assert(html.includes('id="reportHistoryBody"></tbody>'));
+    assert(html.includes('id="reportView" type="submit" class="btn btn-primary">Ver</button>'));
+  }
   assert(html.includes('/public/reportes-uaem-v1.css?v=2'));
   assert(html.includes('/public/reportes-historial-v1.js?v=1'));
   assert(html.includes('/public/panel.js?v=5'));
@@ -72,8 +73,13 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('Centro Universitario UAEM Valle de Chalco'));
   assert(html.includes('escudo-uaem.webp'));
   assert(html.includes('WebAlma'));
-  assert(html.includes('reportes/mensual.csv'));
-  if(role==='administradora') {
+  if(role==='administradora') { 
+    assert(html.includes('reportes/mensual.csv'));
+    assert(html.includes('data-nav="reportes"'));
+    assert(html.includes('id="view-reportes"'));
+    assert(html.includes('<th>Estado</th><th class="align-right">Acciones</th>'));
+    assert(html.includes('value="unverified"'));
+    assert(html.includes('Movimiento</span></button>'));
   assert(html.includes('data-nav="configuracion"'));
   assert(html.includes('data-go="configuracion"'));
   assert(html.includes('id="view-configuracion"'));
@@ -109,6 +115,15 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('id="archiveProductForm" class="archive-product-form" method="post"'));
     assert(html.includes('name="_csrf" value="test-csrf"'));
   } else {
+    assert(!html.includes('data-nav="reportes"'));
+    assert(!html.includes('id="view-reportes"'));
+    assert(!html.includes('id="reportHistoryFilter"'));
+    assert(!html.includes('reportes/mensual.csv'));
+    assert(!html.includes('<th>Estado</th>'));
+    assert(!html.includes('<th class="align-right">Acciones</th>'));
+    assert(!html.includes('value="unverified"'));
+    assert(!html.includes('class="actions-cell"'));
+    assert(html.includes('Consulta los productos, precios y existencias'));
     assert(!html.includes('data-nav="configuracion"'));
     assert(!html.includes('data-go="configuracion"'));
     assert(!html.includes('id="view-configuracion"'));
@@ -151,7 +166,10 @@ assert(panelScript.includes('archiveForm.hidden = true'));
 assert(panelScript.includes('archiveForm.hidden = false'));
 const dbSource=fs.readFileSync(path.join(BASE,'db.js'),'utf8');
 const serverSource=fs.readFileSync(path.join(BASE,'servidor_web.js'),'utf8');
-assert(serverSource.includes("clean(req.query.seccion,24)==='configuracion'"));
+assert(serverSource.includes("['configuracion','reportes'].includes(clean(req.query.seccion,24))"));
+assert(serverSource.includes("app.get('/reportes/historial',auth,admin,"));
+assert(serverSource.includes("app.get('/reportes/semanal.csv',auth,admin,"));
+assert(serverSource.includes("app.get('/reportes/mensual.csv',auth,admin,"));
 assert(serverSource.includes("return res.redirect('/gestor?seccion=resumen')"));
 assert(panelScript.includes("$('[data-view]').some(el => el.dataset.view === name)"));
 assert(serverSource.includes('const horario=validarHorario(req.body.horaApertura,req.body.horaCierre)'));
@@ -241,7 +259,7 @@ console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
 // protege contra errores como llamar .some() sobre querySelector(), que bloqueó todos los menús.
 const navigationSource=fs.readFileSync(path.join(BASE,'public/panel.js'),'utf8');
 function probarNavegacion(rol,primeraSeccion){
-  const nombres=['resumen','inventario','pedidos','impresiones','reportes',...(rol==='administradora'?['configuracion']:[])];
+  const nombres=['resumen','inventario','pedidos','impresiones',...(rol==='administradora'?['reportes','configuracion']:[])];
   const vistas=nombres.map(nombre=>({dataset:{view:nombre},hidden:true}));
   const botones=nombres.map(nombre=>({
     dataset:{nav:nombre},
@@ -266,7 +284,7 @@ function probarNavegacion(rol,primeraSeccion){
     console,
     setTimeout(){}
   },{timeout:2000});
-  const inicial=rol==='auxiliar'&&primeraSeccion==='configuracion'?'resumen':primeraSeccion;
+  const inicial=nombres.includes(primeraSeccion)?primeraSeccion:'resumen';
   assert.strictEqual(vistas.find(v=>!v.hidden)?.dataset.view,inicial);
   for(const nombre of nombres){
     const boton=botones.find(b=>b.dataset.nav===nombre);
@@ -276,11 +294,12 @@ function probarNavegacion(rol,primeraSeccion){
     assert.strictEqual(url,'/gestor?seccion='+encodeURIComponent(nombre));
   }
   if(rol==='auxiliar'){
-    assert(!botones.some(b=>b.dataset.nav==='configuracion'));
-    assert(!vistas.some(v=>v.dataset.view==='configuracion'));
+    assert(!botones.some(b=>['configuracion','reportes'].includes(b.dataset.nav)));
+    assert(!vistas.some(v=>['configuracion','reportes'].includes(v.dataset.view)));
   }
 }
 probarNavegacion('auxiliar','resumen');
 probarNavegacion('auxiliar','configuracion');
+probarNavegacion('auxiliar','reportes');
 probarNavegacion('administradora','configuracion');
 console.log('Navegación por rol simulada: módulos del auxiliar y configuración de administradora OK.');
