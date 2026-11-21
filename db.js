@@ -238,6 +238,9 @@ function verifyPassword(password,stored) {
   return actual.length===expected.length && crypto.timingSafeEqual(actual,expected);
 }
 async function ensureInitialUsers() {
+  // Las cuentas de entorno solo se crean en una base vacía. No se recrean al renombrar o desactivar cuentas.
+  const existing=await query('SELECT 1 FROM public.usuarios LIMIT 1');
+  if(existing.rows.length)return;
   const users=[{name:'Administración',username:process.env.ADMIN_USER,pass:process.env.ADMIN_PASS,rol:'administradora'},
     {name:'Auxiliar',username:process.env.AUX_USER,pass:process.env.AUX_PASS,rol:'auxiliar'}];
   for(const u of users){
@@ -250,6 +253,75 @@ async function verifyLogin(username,password){
   const {rows}=await query('SELECT id,nombre,usuario,contrasena_hash,rol FROM public.usuarios WHERE usuario=$1 AND activo=TRUE',[username]);
   if(!rows.length||!verifyPassword(password,rows[0].contrasena_hash))return null;
   return {id:rows[0].id,nombre:rows[0].nombre,rol:rows[0].rol};
+}
+
+// Las consultas de cuentas nunca devuelven contraseñas o hashes al frontend.
+async function listUsers(){
+  const {rows}=await query('SELECT id,nombre,usuario,rol,activo FROM public.usuarios ORDER BY activo DESC,rol,nombre,id');
+  return rows;
+}
+async function getActiveUser(id){
+  if(!Number.isSafeInteger(Number(id))||Number(id)<1)return null;
+  const {rows}=await query('SELECT id,nombre,rol FROM public.usuarios WHERE id=$1 AND activo=TRUE',[id]);
+  return rows[0]||null;
+}
+async function withUsersLocked(fn){
+  return transaction(async c=>{
+    await c.query('LOCK TABLE public.usuarios IN SHARE ROW EXCLUSIVE MODE');
+    return fn(c);
+  });
+}
+async function createUser(data){
+  return withUsersLocked(async c=>{
+    const collision=await c.query('SELECT id FROM public.usuarios WHERE lower(usuario)=lower($1) LIMIT 1',[data.usuario]);
+    if(collision.rows.length)return {code:'usuario_duplicado'};
+    const result=await c.query(
+      'INSERT INTO public.usuarios(nombre,usuario,contrasena_hash,rol,activo) VALUES($1,$2,$3,$4,TRUE) RETURNING id',
+      [data.nombre,data.usuario,hashPassword(data.password),data.rol]
+    );
+    return {code:'ok',id:result.rows[0].id};
+  });
+}
+// Actualización transaccional y revocación de sesiones: cambio de contraseñas y roles entra en vigor inmediatamente.
+async function updateUser(id,data,actorId,claveActual){
+  return transaction(async c=>{
+    await c.query('LOCK TABLE public.usuarios IN SHARE ROW EXCLUSIVE MODE');
+    const result=await c.query('SELECT id,usuario,contrasena_hash,rol,activo FROM public.usuarios WHERE id=$1 FOR UPDATE',[id]);
+    const old=result.rows[0];
+    if(!old||!old.activo)return {code:'usuario_no_encontrado'};
+    const own=Number(id)===Number(actorId);
+    if(own&&data.rol!=='administradora')return {code:'auto_cambio_prohibido'};
+    if(old.rol==='administradora'&&data.rol!=='administradora'){
+      const count=await c.query("SELECT COUNT(*)::int AS n FROM public.usuarios WHERE rol='administradora' AND activo=TRUE");
+      if(count.rows[0].n<=1)return {code:'ultimo_admin'};
+    }
+    if(own&&(data.usuario!==old.usuario||data.password)&&!verifyPassword(claveActual,old.contrasena_hash))
+      return {code:'clave_actual_incorrecta'};
+    const collision=await c.query('SELECT id FROM public.usuarios WHERE lower(usuario)=lower($1) AND id<>$2 LIMIT 1',[data.usuario,id]);
+    if(collision.rows.length)return {code:'usuario_duplicado'};
+    const hash=data.password?hashPassword(data.password):old.contrasena_hash;
+    await c.query('UPDATE public.usuarios SET nombre=$1,usuario=$2,contrasena_hash=$3,rol=$4 WHERE id=$5',
+      [data.nombre,data.usuario,hash,data.rol,id]);
+    await c.query("DELETE FROM public.web_sessions WHERE sess->'usuario'->>'id'=$1::text",[String(id)]);
+    return {code:'ok',id:Number(id),own};
+  });
+}
+// Baja lógica: preserva las referencias históricas en pedidos, impresiones y movimientos.
+async function deactivateUser(id,actorId){
+  return transaction(async c=>{
+    await c.query('LOCK TABLE public.usuarios IN SHARE ROW EXCLUSIVE MODE');
+    const result=await c.query('SELECT id,rol,activo FROM public.usuarios WHERE id=$1 FOR UPDATE',[id]);
+    const old=result.rows[0];
+    if(!old||!old.activo)return {code:'usuario_no_encontrado'};
+    if(Number(id)===Number(actorId))return {code:'auto_baja_prohibida'};
+    if(old.rol==='administradora'){
+      const count=await c.query("SELECT COUNT(*)::int AS n FROM public.usuarios WHERE rol='administradora' AND activo=TRUE");
+      if(count.rows[0].n<=1)return {code:'ultimo_admin'};
+    }
+    await c.query('UPDATE public.usuarios SET activo=FALSE WHERE id=$1',[id]);
+    await c.query("DELETE FROM public.web_sessions WHERE sess->'usuario'->>'id'=$1::text",[String(id)]);
+    return {code:'ok',id:Number(id)};
+  });
 }
 
 class PgSessionStore extends session.Store {
@@ -270,4 +342,4 @@ const telegramStore={
   async delete(key){await query('DELETE FROM public.telegram_sessions WHERE clave=$1',[key]);}
 };
 module.exports={pool,query,transaction,getInventory,getConfig,getOrders,getImpressions,getReportActivity,getReportHistory,
-  createProduct,editProduct,archiveProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,PgSessionStore,telegramStore};
+  createProduct,editProduct,archiveProduct,moveProduct,createOrder,getOrderDocument,transitionOrder,completeOrder,registerPrint,saveConfig,ensureInitialUsers,verifyLogin,hashPassword,verifyPassword,listUsers,getActiveUser,createUser,updateUser,deactivateUser,PgSessionStore,telegramStore};
