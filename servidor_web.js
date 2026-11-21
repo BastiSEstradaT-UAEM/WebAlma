@@ -10,6 +10,7 @@ const {Server}=require('socket.io');
 const db=require('./db');
 const {createBot}=require('./bot');
 const {validarCuenta}=require('./cuentas');
+const {parseHorario,validarHorario}=require('./horario_atencion');
 const {asegurarEstadosPedido}=require('./migracion_estados');
 const {procesarEstadoPedido}=require('./pedidos_estado');
 
@@ -78,6 +79,7 @@ const RESULT_MESSAGES=Object.freeze({
   pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',
   pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',
   configuracion_guardada:'Configuración guardada correctamente.',
+  horario_invalido:'Selecciona una hora de apertura y otra de cierre diferentes, en formato de 24 horas. El horario anterior no se modificó.',
   usuario_creado:'Cuenta de acceso creada correctamente.',
   usuario_actualizado:'Los datos de acceso se actualizaron. Las sesiones anteriores se cerraron.',
   usuario_eliminado:'Cuenta desactivada. No podrá volver a iniciar sesión.',
@@ -125,7 +127,7 @@ app.get('/gestor',auth,async(req,res)=>{
   const [inventario,pedidosActivos,impresiones,config,usuariosPersonal]=await Promise.all([db.getInventory(),db.getOrders(),db.getImpressions(),db.getConfig(),req.session.usuario.rol==='administradora'?db.listUsers():Promise.resolve([])]);
   const bounds=weekBounds();const lowStock=inventario.filter(x=>x.stock<=(x.stock_minimo_sugerido??config.stockMinimo));
   const reporteActividad=await db.getReportActivity(bounds,todayMX());
-  res.render('gestor',{inventario,pedidosActivos,lowStock,config,reporteActividad,usuariosPersonal,usuario:req.session.usuario,
+  res.render('gestor',{inventario,pedidosActivos,lowStock,config,horarioConfigurado:parseHorario(config.horario),reporteActividad,usuariosPersonal,usuario:req.session.usuario,
     csrf:req.session.csrf,bounds,report:report(impresiones,bounds),recientes:impresiones.slice(-8).reverse(),
     totalUnidades:inventario.reduce((s,p)=>s+p.stock,0),
     valorEstimado:inventario.reduce((s,p)=>s+p.precio*p.stock,0),
@@ -296,8 +298,10 @@ app.post('/configuracion/usuarios/:id/desactivar',auth,admin,csrf,async(req,res)
   go(res,'usuario_eliminado','configuracion');
 });
 app.post('/configuracion/guardar',auth,admin,csrf,async(req,res)=>{
+  const horario=validarHorario(req.body.horaApertura,req.body.horaCierre);
+  if(!horario)return go(res,'horario_invalido','configuracion');
   const values={stockMinimo:nonnegInt(req.body.stockMinimo),precioBN:money(req.body.precioBN),precioColor:money(req.body.precioColor),
-    horario:clean(req.body.horario,100),aviso:clean(req.body.aviso,350),preciosValidados:req.body.preciosValidados==='si'};
+    horario,aviso:clean(req.body.aviso,350),preciosValidados:req.body.preciosValidados==='si'};
   if(values.stockMinimo===null||values.precioBN===null||values.precioColor===null)return go(res,'datos_invalidos','configuracion');
   await db.saveConfig(values);io.emit('configuracion_actualizada');go(res,'configuracion_guardada','configuracion');
 });

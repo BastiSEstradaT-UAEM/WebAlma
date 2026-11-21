@@ -3,7 +3,8 @@ const assert=require('node:assert/strict');
 const path=require('node:path');
 const modulePath=path.resolve(__dirname,'..');
 process.env.TELEGRAM_BOT_TOKEN='123456:TEST_ONLY';
-const storage=new Map();let registrado;
+const storage=new Map();let registrado;let pdfAnalizados=0;
+let ahora=new Date('2026-11-20T18:00:00.000Z'); // 12:00, CDMX
 let liveConfig={precioBN:1,precioColor:5,horario:'07:00 a 19:00',aviso:'Abrimos el sábado a las 8',preciosValidados:true};
 const dbMock={
   telegramStore:{get:async k=>storage.get(k),set:async(k,v)=>{storage.set(k,v)},delete:async k=>{storage.delete(k)}},
@@ -16,10 +17,10 @@ const pdfId=require.resolve(path.join(modulePath,'pdf_cotizador.js'));
 const realPDF=require(pdfId);
 require.cache[pdfId].exports={...realPDF,
   descargarPDFTelegram:async()=>Buffer.from('%PDF-1.7...mock'),
-  analizarPDF:async()=>({paginas:12,formato:'Carta'})
+  analizarPDF:async()=>{pdfAnalizados++;return {paginas:12,formato:'Carta'};}
 };
 const {createBot}=require('../bot');
-const bot=createBot(async pedido=>{registrado=pedido;return {id:'17'}});
+const bot=createBot(async pedido=>{registrado=pedido;return {id:'17'}},{ahora:()=>ahora});
 bot.botInfo={id:123456,is_bot:true,first_name:'WebAlma',username:'testWebAlmaBot'};
 const requests=[];const {Telegram}=require(path.join(path.dirname(require.resolve('telegraf')),'telegram.js'));Telegram.prototype.callApi=async function(method,payload){requests.push({method,payload});return method==='sendMessage'?{message_id:66,chat:{id:42,type:'private'},text:payload.text}:true};
 let n=1;const from={id:42,is_bot:false,first_name:'Basti'};const chat={id:42,type:'private'};
@@ -28,9 +29,15 @@ async function cb(data){await bot.handleUpdate({update_id:n++,callback_query:{id
 async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n,date:1,from,chat,document:{file_id:'ABCD_1234',file_name:'Tarea.pdf',mime_type:'application/pdf',file_size:500}}});}
 (async()=>{
   await msg('/start');
-  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('07:00 a 19:00')),'El menú comunica el horario');
-  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Abrimos el sábado a las 8')),'El menú comunica el aviso');
-  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$5.00')),'El menú muestra tarifa por cara');
+  const bienvenida=requests.find(r=>r.method==='sendMessage');
+  assert.ok(bienvenida.payload.text.includes('¿Qué necesitas hoy?'),'Bienvenida breve durante el horario');
+  assert.ok(!bienvenida.payload.text.includes('Tarifas por cara'),'El menú no repite todas las tarifas');
+  assert.ok(bienvenida.payload.reply_markup?.inline_keyboard?.length>0,'Durante el horario se muestran botones');
+  await cb('informacion');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('7:00 a. m. – 7:00 p. m.')),'Los horarios aparecen en la sección adecuada');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Abrimos el sábado a las 8')),'El aviso aparece bajo Horarios');
+  await cb('tarifas');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$5.00')),'La tarifa aparece al solicitarla');
   liveConfig={...liveConfig,precioBN:2,precioColor:4,horario:'09:00 a 17:00',aviso:'Hoy cerramos antes'};
   await cb('informacion');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Hoy cerramos antes')),'El horario se consulta en tiempo real');
@@ -51,5 +58,29 @@ async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n
   assert.equal(registrado.articulos[0].archivo.fileId,'ABCD_1234');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('17')));
   await cb('carrito');assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('vacío')));
-  console.log('Flujo Telegram simulado: horario, aviso, tarifas actualizadas, PDF, carrito y pedido OK.');
+  assert.equal(pdfAnalizados,1,'El documento de prueba se analizó una sola vez');
+  // Fuera de horario se ignoran incluso botones antiguos, mensajes y PDFs.
+  ahora=new Date('2026-11-21T04:00:00.000Z'); // 22:00, Ciudad de México
+  const before=requests.length,previousOrder=registrado;
+  await msg('/start');
+  await msg('2 cuadernos');
+  await doc();
+  await cb('productos');
+  await cb('comprar');
+  const closed=requests.slice(before);
+  const notices=closed.filter(r=>r.method==='sendMessage');
+  assert.equal(notices.length,5,'Cada intento recibe un aviso de cierre');
+  assert.ok(notices.every(r=>r.payload.text.includes('En este momento no estamos disponibles. ¡Nos vemos pronto!')),'Texto de cierre con ortografía');
+  assert.ok(notices.every(r=>!r.payload.reply_markup?.inline_keyboard?.length),'Ningún mensaje de cierre muestra menú');
+  assert.ok(closed.some(r=>r.method==='answerCallbackQuery'),'Los botones antiguos se reconocen sin ejecutar acciones');
+  assert.equal(pdfAnalizados,1,'Fuera de horario no se analiza el PDF');
+  assert.equal(registrado,previousOrder,'Fuera del horario no se registra un pedido');
+  // Al abrir de nuevo, el mismo chat recupera el menú sin reiniciar Render.
+  ahora=new Date('2026-11-21T17:00:00.000Z'); // 11:00, Ciudad de México
+  const lastOpen=requests.length;
+  await msg('/start');
+  const reopened=requests.slice(lastOpen).find(r=>r.method==='sendMessage');
+  assert.ok(reopened.payload.text.includes('¿Qué necesitas hoy?'));
+  assert.ok(reopened.payload.reply_markup?.inline_keyboard?.length>0);
+  console.log('Flujo Telegram simulado: apertura/cierre, horarios, tarifas, PDF, carrito y pedido OK.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

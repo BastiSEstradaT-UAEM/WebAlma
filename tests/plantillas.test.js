@@ -16,6 +16,7 @@ const sampleReport=buildReportActivity(
 );
 const data={inventario:sample,pedidosActivos:[],lowStock:sample,
   config:{stockMinimo:10,precioBN:1,precioColor:5,horario:'07:00 a 19:00',aviso:'',preciosValidados:false},
+   horarioConfigurado:{apertura:'07:00',cierre:'19:00'},
   usuario:{id:1,nombre:'Administración',rol:'administradora'},csrf:'test-csrf',
    usuariosPersonal:[{id:1,nombre:'Administración',usuario:'admin',rol:'administradora',activo:true},
      {id:2,nombre:'Auxiliar',usuario:'auxiliar1',rol:'auxiliar',activo:true},
@@ -62,7 +63,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="openSidebar"'));
   assert(html.includes('id="closeSidebar"'));
   assert(html.includes('class="sidebar"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=3'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=4'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -72,6 +73,14 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('WebAlma'));
   assert(html.includes('reportes/mensual.csv'));
   if(role==='administradora') {
+  assert(html.includes('name="horaApertura"'));
+  assert(html.includes('name="horaCierre"'));
+  assert(html.includes('type="time"'));
+  assert(!html.includes('id="openingHours"'));
+  assert(!html.includes('name="horario"'));
+  assert(html.includes('Se aplica todos los días'));
+  assert(!html.includes('El horario anterior no es válido.'));
+  assert(!html.includes('0:600am a 19:00pm'));
     assert(html.includes('id="archiveProductForm"'));
     assert(html.includes('id="archiveProductBtn"'));
     assert(html.includes('Usuarios y contraseñas'));
@@ -95,6 +104,9 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('id="archiveProductForm" class="archive-product-form" method="post"'));
     assert(html.includes('name="_csrf" value="test-csrf"'));
   } else {
+    assert(!html.includes('name="horaApertura"'));
+    assert(!html.includes('name="horaCierre"'));
+    assert(!html.includes('id="openingHours"'));
     assert(!html.includes('id="newProductBtn"'));
     assert(!html.includes('action="/configuracion/usuarios/crear"'));
     assert(!html.includes('action="/configuracion/usuarios/2/actualizar"'));
@@ -130,6 +142,8 @@ assert(panelScript.includes('archiveForm.hidden = true'));
 assert(panelScript.includes('archiveForm.hidden = false'));
 const dbSource=fs.readFileSync(path.join(BASE,'db.js'),'utf8');
 const serverSource=fs.readFileSync(path.join(BASE,'servidor_web.js'),'utf8');
+assert(serverSource.includes('const horario=validarHorario(req.body.horaApertura,req.body.horaCierre)'));
+assert(serverSource.includes("if(!horario)return go(res,'horario_invalido','configuracion')"));
 assert(serverSource.includes("app.post('/configuracion/usuarios/crear',auth,admin,csrf,async(req,res)=>{"));
 assert(serverSource.includes("app.post('/configuracion/usuarios/:id/actualizar',auth,admin,csrf,async(req,res)=>{"));
 assert(serverSource.includes("app.post('/configuracion/usuarios/:id/desactivar',auth,admin,csrf,async(req,res)=>{"));

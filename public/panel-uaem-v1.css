@@ -359,3 +359,8 @@ body{background:#f5f8f3}
   .staff-account-status{margin-left:auto}
   .staff-edit-body .btn-primary{width:100%}
 }
+
+/* Horario operativo de WebAlma: dos campos de tiempo sin ambigüedad de a. m./p. m. */
+.section-field-label{margin:0 0 8px;color:#225c41;font-size:12px;font-weight:800}
+#view-configuracion input[type=time]{width:100%;min-height:45px}
+#view-configuracion .schedule-alert{margin-top:7px;padding:8px 11px;background:#fbf9ee;border-left:3px solid #d9b45d;border-radius:5px;font-size:11px;color:#6d6040}
