@@ -35,12 +35,15 @@ function createBot(onOrder,{ahora=()=>new Date()}={}){
     }
     return ctx.reply(MENSAJE_CERRADO);
   });
+  // No reutilizar textos antiguos: solo avisos con vigencia futura son visibles.
+  const vigente=(fecha)=>{const ms=new Date(fecha||0).getTime();return Number.isFinite(ms)&&ms>ahora().getTime();};
+  const avisoEspecial=(cfg)=>vigente(cfg.avisoHasta)?String(cfg.aviso||'').trim():'';
   // Cada entrada al menú lee PostgreSQL. No se almacena en caché la configuración pública.
   function informacionPublica(cfg){
     const horario=horarioLegible(cfg.horario);
-    const aviso=String(cfg.aviso||'').trim();
+    const aviso=avisoEspecial(cfg);
     return '🕒 Horario de la papelería: '+horario+
-      (aviso?'\n📢 Aviso del establecimiento: '+aviso:'\n📢 Sin avisos especiales.');
+      (aviso?'\n📢 Aviso del establecimiento: '+aviso:'\n📢 Sin avisos especiales vigentes.');
   }
   function tarifasPublicas(cfg){
     const leyenda=cfg.preciosValidados?'Tarifas confirmadas por la papelería.':'Tarifas estimadas, sujetas a confirmación.';
@@ -50,12 +53,16 @@ function createBot(onOrder,{ahora=()=>new Date()}={}){
   async function menu(ctx){
     // Usar el nombre público de Telegram; no pedir datos personales adicionales.
     const nombre=String(ctx.from?.first_name||'').replace(/\s+/g,' ').trim().slice(0,60)||'estudiante';
-    // Mostrar avisos configurados desde el panel sin un botón dedicado.
-    const aviso=String((await db.getConfig()).aviso||'').trim();
+    const cfg=await db.getConfig();
+    const avisos=[];
+    if(vigente(cfg.horarioAvisoHasta))
+      avisos.push('🕒 Horario actualizado: '+horarioLegible(cfg.horario));
+    const aviso=avisoEspecial(cfg);
+    if(aviso)avisos.push('📢 Aviso: '+aviso);
     return ctx.reply('📘 Papelería universitaria UAEM Valle de Chalco 🦆💚💛\n\n'+
       `👋 ¡Hola, ${nombre}! Bienvenido a la papelería universitaria.\n\n`+
       'Estoy aquí para ayudarte a consultar productos, conocer precios y cotizar tus impresiones.\n\n'+
-      (aviso?`📢 Aviso: ${aviso}\n\n`:'')+
+      (avisos.length?avisos.join('\n')+'\n\n':'')+
       '¿Qué necesitas hoy? 😊',inicio());
   }
   async function enter(ctx){await ctx.answerCbQuery().catch(()=>{});}
