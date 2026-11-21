@@ -270,7 +270,7 @@ app.get('/reportes/mensual.csv',auth,async(req,res)=>{
   res.type('text/csv; charset=utf-8').set('Content-Disposition',`attachment; filename="reporte_mensual_${mes}.csv"`).send(csvReport(data));
 });
 // Gestión de cuentas: restringida a administradora, protegida por CSRF, sin eliminar historial.
-const userId=v=>{const n=Number(v);return /^[1-9]\\d*$/.test(String(v))&&Number.isSafeInteger(n)?n:null;};
+const userId=v=>{const n=Number(v);return /^[1-9]\d*$/.test(String(v))&&Number.isSafeInteger(n)?n:null;};
 app.post('/configuracion/usuarios/crear',auth,admin,csrf,async(req,res)=>{
   const values=validarCuenta(req.body,{exigirPassword:true});
   if(values.error)return go(res,'cuenta_datos_invalidos','configuracion');
