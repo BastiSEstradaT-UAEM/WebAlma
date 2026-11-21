@@ -6,10 +6,19 @@ const ejs=require('ejs');
 const BASE=path.resolve(__dirname,'..');
 const sample=[{id:1,producto:'Libreta de prueba',precio:25,stock:4,stock_minimo_sugerido:5,
   categoria:'Cuadernos',existencia_confirmada:false,precio_confirmado:false,datos_de_prueba:true}];
+const {buildReportActivity}=require('../reportes_actividad');
+const sampleReport=buildReportActivity(
+  [{estado:'entregado',cantidad:2,cotizado:130},{estado:'rechazado',cantidad:3,cotizado:410}],
+  [{dia:'2026-11-20',estado:'entregado',cantidad:2,cotizado:130},
+   {dia:'2026-11-20',estado:'rechazado',cantidad:3,cotizado:410}],
+  [{id:87,dia:'2026-11-20',hora:'17:30',estado:'rechazado',total:91,articulos:1,pdf:1}],
+  {total_pdf:1,pedidos_pdf:1},{start:'2026-11-16',end:'2026-11-22'},'2026-11-20'
+);
 const data={inventario:sample,pedidosActivos:[],lowStock:sample,
   config:{stockMinimo:10,precioBN:1,precioColor:5,horario:'07:00 a 19:00',aviso:'',preciosValidados:false},
   usuario:{id:1,nombre:'Administración',rol:'administradora'},csrf:'test-csrf',
-  bounds:{start:'2026-11-02',end:'2026-11-08'},
+  bounds:{start:'2026-11-16',end:'2026-11-22'},
+  reporteActividad:sampleReport,
   report:{bn:{trabajos:0,hojas:0,ingresos:0},color:{trabajos:0,hojas:0,ingresos:0},total:0},
   recientes:[],totalUnidades:4,valorEstimado:100,seccion:'inventario',resultado:''};
 for(const role of ['administradora','auxiliar']) {
@@ -17,6 +26,13 @@ for(const role of ['administradora','auxiliar']) {
     {...data,usuario:{id:1,nombre:'Prueba',rol:role}},{filename:path.join(BASE,'views/gestor.ejs')});
   assert(html.includes('Libreta de prueba'));
   assert(html.includes('Corte mensual'));
+  assert(html.includes('Pedidos de la semana'));
+  assert(html.includes('Estado de los pedidos'));
+  assert(html.includes('Historial de pedidos y pruebas'));
+  assert(html.includes('data-report-date="2026-11-20"'));
+  assert(html.includes('#87'));
+  assert(html.includes('No hay una marca'));
+  assert(html.includes('/public/reportes-uaem-v1.css?v=1'));
   assert(html.includes('Conectado a PostgreSQL'));
   assert(html.includes('/public/panel-uaem-v1.css?v=1'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
@@ -78,4 +94,8 @@ assert(uaemPanelCss.includes('.btn-primary'));
 assert(uaemPanelCss.includes('.modal'));
 assert(uaemPanelCss.includes('.data-table'));
 assert(fs.statSync(path.join(BASE,'public/escudo-uaem.webp')).size>1000);
+const reportCss=fs.readFileSync(path.join(BASE,'public/reportes-uaem-v1.css'),'utf8');
+assert(reportCss.includes('.report-bars'));
+assert(reportCss.includes('.report-state-chart'));
+assert(reportCss.includes('.report-history-table'));
 console.log('Prueba de plantillas: OK (administración, auxiliar, login).');
