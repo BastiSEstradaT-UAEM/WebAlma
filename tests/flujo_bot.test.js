@@ -33,7 +33,7 @@ async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n
   assert.ok(bienvenida.payload.text.includes('¿Qué necesitas hoy?'),'Bienvenida breve durante el horario');
   assert.ok(bienvenida.payload.text.startsWith('📘 Papelería universitaria UAEM Valle de Chalco 🦆💚💛'),'Encabezado sin WebAlma y con mascota y corazones');
   assert.ok(bienvenida.payload.text.includes('¡Hola, Basti! Bienvenido'),'Saludo con el nombre público de Telegram');
-  assert.ok(bienvenida.payload.text.includes('Abrimos el sábado a las 8'),'Aviso del panel visible directamente en el saludo');
+  assert.ok(!bienvenida.payload.text.includes('📢 Aviso:'),'Avisos heredados sin vigencia se ocultan del saludo');
   assert.ok(!bienvenida.payload.text.includes('Tarifas por cara'),'El menú no repite todas las tarifas');
   const etiquetas=bienvenida.payload.reply_markup?.inline_keyboard?.flat().map(b=>b.text)||[];
   assert.equal(etiquetas.length,7,'El menú incluye los siete accesos solicitados');
@@ -41,14 +41,23 @@ async function doc(){await bot.handleUpdate({update_id:n++,message:{message_id:n
   assert.ok(etiquetas.includes('💰 Tarifas')&&etiquetas.includes('✅ Finalizar pedido'),'Se preservan funciones principales');
   await cb('informacion');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('7:00 a. m. – 7:00 p. m.')),'Los horarios aparecen en la sección adecuada');
-  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Abrimos el sábado a las 8')),'El aviso aparece bajo Horarios');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Sin avisos especiales vigentes')),'Los avisos heredados tampoco aparecen en consulta de horarios');
   await cb('tarifas');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$5.00')),'La tarifa aparece al solicitarla');
-  liveConfig={...liveConfig,precioBN:2,precioColor:4,horario:'09:00 a 17:00',aviso:'Hoy cerramos antes'};
+  liveConfig={...liveConfig,precioBN:2,precioColor:4,horario:'09:00 a 17:00',aviso:'Hoy cerramos antes',
+    horarioAvisoHasta:'2026-11-21T18:00:00Z',avisoHasta:'2026-11-21T18:00:00Z'};
   await cb('inicio');
-  assert.ok(requests.at(-1)?.payload?.text?.includes('Hoy cerramos antes'),'Avisos actualizados del panel aparecen en la nueva bienvenida');
+  assert.ok(requests.at(-1)?.payload?.text?.includes('🕒 Horario actualizado: 9:00 a. m. – 5:00 p. m.'),'Cambio reciente de horario visible');
+  assert.ok(requests.at(-1)?.payload?.text?.includes('Hoy cerramos antes'),'Avisos especiales vigentes visibles en bienvenida');
   await cb('informacion');
-  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Hoy cerramos antes')),'El horario se consulta en tiempo real');
+  assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('Hoy cerramos antes')),'Aviso vigente en consulta de horarios');
+  liveConfig={...liveConfig,avisoHasta:'2026-11-20T17:00:00Z',horarioAvisoHasta:'2026-11-20T17:00:00Z'};
+  await cb('inicio');
+  assert.ok(!requests.at(-1)?.payload?.text?.includes('📢 Aviso:'),'Aviso especial caducado no se muestra');
+  assert.ok(!requests.at(-1)?.payload?.text?.includes('Horario actualizado:'),'Aviso de horario caducado no se muestra');
+  liveConfig={...liveConfig,avisoHasta:null,horarioAvisoHasta:null};
+  await cb('inicio');
+  assert.ok(!requests.at(-1)?.payload?.text?.includes('📢 Aviso:'),'Avisos inactivos permanecen ocultos');
   await cb('tarifas');
   assert.ok(requests.some(r=>r.method==='sendMessage'&&String(r.payload.text).includes('$4.00')),'Las tarifas reflejan los cambios en PostgreSQL');
   // Recuperar tarifas iniciales para el caso PDF de cotización existente.
