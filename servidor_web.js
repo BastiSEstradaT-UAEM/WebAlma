@@ -72,7 +72,8 @@ app.post('/logout',auth,csrf,(req,res)=>req.session.destroy(()=>res.redirect('/'
 app.get('/gestor',auth,async(req,res)=>{
   const [inventario,pedidosActivos,impresiones,config]=await Promise.all([db.getInventory(),db.getOrders(),db.getImpressions(),db.getConfig()]);
   const bounds=weekBounds();const lowStock=inventario.filter(x=>x.stock<=(x.stock_minimo_sugerido??config.stockMinimo));
-  res.render('gestor',{inventario,pedidosActivos,lowStock,config,usuario:req.session.usuario,
+  const reporteActividad=await db.getReportActivity(bounds,todayMX());
+  res.render('gestor',{inventario,pedidosActivos,lowStock,config,reporteActividad,usuario:req.session.usuario,
     csrf:req.session.csrf,bounds,report:report(impresiones,bounds),recientes:impresiones.slice(-8).reverse(),
     totalUnidades:inventario.reduce((s,p)=>s+p.stock,0),
     valorEstimado:inventario.reduce((s,p)=>s+p.precio*p.stock,0),
