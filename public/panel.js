@@ -27,10 +27,6 @@
   if ($('#closeSidebar')) $('#closeSidebar').addEventListener('click', () => $('#sidebar').classList.remove('open'));
   show(document.body.dataset.initialSection || 'resumen');
 
-  const flash = $('[data-flash]');
-  const messages = {producto_agregado:'Producto agregado al catálogo.',producto_actualizado:'Producto actualizado correctamente.',movimiento_registrado:'Movimiento de inventario registrado.',impresion_registrada:'Servicio de impresión registrado.',pedido_entregado:'Pedido marcado como entregado.',pedido_aceptado:'Pedido aceptado. Se notificó al estudiante por Telegram.',pedido_rechazado:'Pedido rechazado. Se notificó al estudiante por Telegram.',pedido_aceptado_sin_aviso:'Pedido aceptado, pero Telegram no pudo entregar el aviso.',pedido_rechazado_sin_aviso:'Pedido rechazado, pero Telegram no pudo entregar el aviso.',pedido_entregado_sin_aviso:'Pedido entregado; no se pudo enviar aviso por Telegram.',pedido_aceptado_sin_destinatario:'Pedido aceptado; no hay cuenta de Telegram asociada.',pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',configuracion_guardada:'Configuración guardada.',datos_invalidos:'Revisa los datos del formulario.',movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',pedido_no_encontrado:'El pedido ya no está pendiente.'};
-  if (flash) flash.textContent = messages[flash.dataset.flash] || 'Operación terminada.';
-
   const filterInventory = () => {
     if (!$('#inventorySearch')) return;
     const query = $('#inventorySearch').value.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();

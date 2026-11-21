@@ -42,6 +42,27 @@ function auth(req,res,next){if(req.session.usuario)return next();res.redirect('/
 function admin(req,res,next){if(req.session.usuario?.rol==='administradora')return next();res.status(403).send('Acceso reservado a la propietaria.');}
 function csrf(req,res,next){const a=String(req.body._csrf||''),b=String(req.session.csrf||'');
   if(!a||a.length!==b.length||!same(a,b))return res.status(403).send('Formulario vencido o inválido.');next();}
+// Las confirmaciones se presentan desde el servidor: deben ser visibles incluso si JS no carga.
+const RESULT_MESSAGES=Object.freeze({
+  producto_agregado:'Producto agregado al catálogo.',
+  producto_actualizado:'Producto actualizado correctamente.',
+  movimiento_registrado:'Movimiento de inventario registrado.',
+  impresion_registrada:'Servicio de impresión registrado.',
+  pedido_entregado:'Pedido marcado como entregado.',
+  pedido_aceptado:'Pedido aceptado. Se notificó al estudiante por Telegram.',
+  pedido_rechazado:'Pedido rechazado. Se notificó al estudiante por Telegram.',
+  pedido_aceptado_sin_aviso:'Pedido aceptado, pero Telegram no pudo entregar el aviso.',
+  pedido_rechazado_sin_aviso:'Pedido rechazado, pero Telegram no pudo entregar el aviso.',
+  pedido_entregado_sin_aviso:'Pedido entregado; no se pudo enviar aviso por Telegram.',
+  pedido_aceptado_sin_destinatario:'Pedido aceptado; no hay cuenta de Telegram asociada.',
+  pedido_rechazado_sin_destinatario:'Pedido rechazado; no hay cuenta de Telegram asociada.',
+  pedido_entregado_sin_destinatario:'Pedido entregado; no hay cuenta de Telegram asociada.',
+  configuracion_guardada:'Configuración guardada correctamente.',
+  datos_invalidos:'Revisa los datos del formulario.',
+  movimiento_invalido:'Movimiento inválido: revisa existencias y cantidad.',
+  lotes_inconsistentes:'Los lotes no coinciden con el inventario. Revisa la información.',
+  pedido_no_encontrado:'El pedido ya no está pendiente.'
+});
 function go(res,code,section='inventario'){res.redirect(`/gestor?seccion=${encodeURIComponent(section)}&resultado=${encodeURIComponent(code)}`);}
 function todayMX(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Mexico_City',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
   const p=k=>parts.find(x=>x.type===k).value;return `${p('year')}-${p('month')}-${p('day')}`;}
@@ -77,7 +98,10 @@ app.get('/gestor',auth,async(req,res)=>{
     csrf:req.session.csrf,bounds,report:report(impresiones,bounds),recientes:impresiones.slice(-8).reverse(),
     totalUnidades:inventario.reduce((s,p)=>s+p.stock,0),
     valorEstimado:inventario.reduce((s,p)=>s+p.precio*p.stock,0),
-    seccion:clean(req.query.seccion,24),resultado:clean(req.query.resultado,80)});
+    seccion:clean(req.query.seccion,24),resultado:clean(req.query.resultado,80),
+    mensajeResultado:Object.hasOwn(RESULT_MESSAGES,clean(req.query.resultado,80))
+      ? RESULT_MESSAGES[clean(req.query.resultado,80)]
+      : (req.query.resultado?'Operación terminada.':'')});
 });
 app.post('/inventario/nuevo',auth,admin,csrf,async(req,res)=>{
   const data={producto:clean(req.body.producto,150),categoria:clean(req.body.categoria,80)||'Otros',

@@ -20,7 +20,7 @@ const data={inventario:sample,pedidosActivos:[],lowStock:sample,
   bounds:{start:'2026-11-16',end:'2026-11-22'},
   reporteActividad:sampleReport,
   report:{bn:{trabajos:0,hojas:0,ingresos:0},color:{trabajos:0,hojas:0,ingresos:0},total:0},
-  recientes:[],totalUnidades:4,valorEstimado:100,seccion:'inventario',resultado:''};
+  recientes:[],totalUnidades:4,valorEstimado:100,seccion:'inventario',resultado:'',mensajeResultado:''};
 for(const role of ['administradora','auxiliar']) {
   const html=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
     {...data,usuario:{id:1,nombre:'Prueba',rol:role}},{filename:path.join(BASE,'views/gestor.ejs')});
@@ -41,6 +41,9 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="reportView" type="submit" class="btn btn-primary">Ver</button>'));
   assert(html.includes('/public/reportes-uaem-v1.css?v=2'));
   assert(html.includes('/public/reportes-historial-v1.js?v=1'));
+  assert(html.includes('/public/panel.js?v=2'));
+  assert(!html.includes('class="flash"'));
+
   assert(!html.includes('Historial de pedidos y pruebas'));
   assert(!html.includes('No hay una marca'));
   assert(!html.includes('Ver pruebas de hoy'));
@@ -67,6 +70,22 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('reportes/mensual.csv'));
   if(role==='auxiliar')assert(!html.includes('id="newProductBtn"'));
 }
+// El mensaje de éxito debe llegar en el HTML: JS puede estar desactivado o cacheado.
+const template=fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8');
+for (const role of ['administradora','auxiliar']) {
+  const confirmHtml=ejs.render(template,{
+    ...data,usuario:{id:1,nombre:'Prueba',rol:role},
+    seccion:'configuracion',resultado:'configuracion_guardada',
+    mensajeResultado:'Configuración guardada correctamente.'
+  },{filename:path.join(BASE,'views/gestor.ejs')});
+  assert(confirmHtml.includes('data-flash="configuracion_guardada"'));
+  assert(confirmHtml.includes('role="status">Configuración guardada correctamente.</div>'));
+  assert(!confirmHtml.includes('data-flash="configuracion_guardada" role="status"></div>'));
+}
+const badDataHtml=ejs.render(template,{
+  ...data,resultado:'datos_invalidos',mensajeResultado:'Revisa los datos del formulario.'
+},{filename:path.join(BASE,'views/gestor.ejs')});
+assert(badDataHtml.includes('role="status">Revisa los datos del formulario.</div>'));
 const panelScript=fs.readFileSync(path.join(BASE,'public/panel.js'),'utf8');
 assert(!panelScript.includes("$('#currentViewName')"));
 assert(!panelScript.includes("$('#todayDate')"));
