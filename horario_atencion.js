@@ -5,6 +5,23 @@
 const ZONA_HORARIA='America/Mexico_City';
 const HORA_VALIDA=/^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const FORMATO_GUARDADO=/^(\d{2}:\d{2}) a (\d{2}:\d{2})$/;
+// Compatibilidad con valores anteriores, por ejemplo "06:00am a 19:00pm".
+// La nueva interfaz siempre guarda el formato inequívoco "06:00 a 19:00".
+const FORMATO_ANTERIOR=/^(\d{1,2}):([0-5]\d)\s*(am|pm)?\s+a\s+(\d{1,2}):([0-5]\d)\s*(am|pm)?$/i;
+function horaLegada(hora,minuto,periodo){
+  let h=Number(hora);
+  if(!Number.isInteger(h)||h<0||h>23)return null;
+  if(periodo==='am'){
+    if(h>12)return null;
+    if(h===12)h=0;
+  }else if(periodo==='pm'){
+    if(h===0)return null;
+    if(h<12)h+=12;
+    // Para 13-23 el sufijo "pm" era redundante; no suma otras doce horas.
+  }
+  return String(h).padStart(2,'0')+':'+minuto;
+}
+
 
 function validarHorario(apertura,cierre){
   const a=String(apertura||'').trim(),c=String(cierre||'').trim();
@@ -12,9 +29,15 @@ function validarHorario(apertura,cierre){
   return a+' a '+c;
 }
 function parseHorario(texto){
-  const match=FORMATO_GUARDADO.exec(String(texto||'').trim());
-  if(!match||!validarHorario(match[1],match[2]))return null;
-  return {apertura:match[1],cierre:match[2]};
+  const raw=String(texto||'').trim();
+  const match=FORMATO_GUARDADO.exec(raw);
+  if(match&&validarHorario(match[1],match[2]))return {apertura:match[1],cierre:match[2]};
+  const viejo=FORMATO_ANTERIOR.exec(raw);
+  if(!viejo)return null;
+  const apertura=horaLegada(viejo[1],viejo[2],viejo[3]?.toLowerCase());
+  const cierre=horaLegada(viejo[4],viejo[5],viejo[6]?.toLowerCase());
+  if(!apertura||!cierre||!validarHorario(apertura,cierre))return null;
+  return {apertura,cierre};
 }
 function minutos(hora){
   const [h,m]=hora.split(':').map(Number);

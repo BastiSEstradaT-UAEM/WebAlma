@@ -10,6 +10,14 @@ assert.equal(validarHorario('24:00','19:00'),null);
 assert.equal(validarHorario('06:60','19:00'),null);
 assert.deepEqual(parseHorario('06:00 a 19:00'),{apertura:'06:00',cierre:'19:00'});
 assert.equal(parseHorario('0:600am a 19:00pm'),null);
+assert.deepEqual(parseHorario('06:00am a 19:00pm'),{apertura:'06:00',cierre:'19:00'});
+assert.deepEqual(parseHorario('6:00am a 7:00pm'),{apertura:'06:00',cierre:'19:00'});
+assert.deepEqual(parseHorario('12:00am a 12:00pm'),{apertura:'00:00',cierre:'12:00'});
+assert.equal(parseHorario('19:00am a 22:00pm'),null);
+assert.equal(parseHorario('23:00pm a 23:00pm'),null);
+assert.equal(horarioLegible('06:00am a 19:00pm'),'6:00 a. m. – 7:00 p. m.');
+assert.equal(estaAbierto('06:00am a 19:00pm',new Date('2026-11-21T04:00:00Z')),false);
+
 assert.equal(horarioLegible('06:00 a 19:00'),'6:00 a. m. – 7:00 p. m.');
 assert.equal(horarioLegible('horario mal escrito'),'Por confirmar');
 // 2026-11-20 12:00 UTC = 06:00 en Ciudad de México.
