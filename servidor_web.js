@@ -9,6 +9,7 @@ const {Readable}=require('node:stream');
 const {Server}=require('socket.io');
 const db=require('./db');
 const {createBot}=require('./bot');
+const {asegurarEstadosPedido}=require('./migracion_estados');
 const {procesarEstadoPedido}=require('./pedidos_estado');
 
 for (const name of ['DATABASE_URL','SESSION_SECRET','ADMIN_USER','ADMIN_PASS']) {
@@ -214,6 +215,7 @@ async function start(){
   const configCheck=await db.query('SELECT 1 FROM public.configuracion WHERE id=1');
   if(!configCheck.rows.length)throw new Error('Falta ejecutar 01_actualizacion_segura.sql');
   await db.ensureInitialUsers();
+  await asegurarEstadosPedido(db.pool);
   await new Promise(resolve=>server.listen(PORT,'0.0.0.0',resolve));
   console.log(`WebAlma web escuchando en puerto ${PORT}`);
   try{await initializeBot();}catch(e){console.error('No se pudo iniciar Telegram:',e.message);server.close();process.exitCode=1;}
