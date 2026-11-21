@@ -240,6 +240,8 @@ assert(login.includes('escudo-uaem-nitido.svg'));
 assert(login.includes('<link rel="icon" type="image/svg+xml" sizes="any" href="/public/escudo-uaem-nitido.svg?v=2">'));
 assert(!login.includes('rel="icon" href="/favicon.ico"'));
 assert(!login.includes('/public/escudo-uaem.webp'));
+assert(login.includes('WebAlma · Sistema de gestión en la nube · 2026'));
+assert(!login.includes('Sistema de gestión local'));
 assert(login.includes('method="post"'));
 assert(login.includes('name="_csrf"'));
 assert(login.includes('autocomplete="username"'));
