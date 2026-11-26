@@ -76,5 +76,13 @@ vm.runInNewContext(script,{document,fetch,AbortController:AbortControllerMock,UR
   assert(!calls[1].url.includes('estado='));
   assert(!script.includes('reportToday'));
   assert(!script.includes('reportClear'));
+
+  // Regresión: la validación del servidor debe aceptar fechas ISO reales.
+  const backend=fs.readFileSync(path.join(__dirname,'../servidor_web.js'),'utf8');
+  const match=backend.match(/if\(!((?:\/\^[^\r\n]*\$\/))\.test\(fecha\)\)/);
+  assert(match,'Existe el validador de fecha del historial en el servidor');
+  const validDateRegex=vm.runInNewContext('('+match[1]+')');
+  assert(validDateRegex.test('2026-11-23'),'Acepta fecha ISO YYYY-MM-DD');
+  assert(!validDateRegex.test('23/11/2026'),'Rechaza formato dd/mm/aaaa');
   console.log('Historial: OK (oculto, Ver, fecha/estado, actualización y tabla segura).');
 })().catch(e=>{console.error(e);process.exitCode=1;});
