@@ -106,7 +106,12 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('type="time"'));
   assert(!html.includes('id="openingHours"'));
   assert(!html.includes('name="horario"'));
-  assert(html.includes('Se aplica todos los días'));
+  assert(!html.includes('¿Cómo opera el horario?'));
+   assert(!html.includes('¿Cuándo se muestran los avisos?'));
+   assert(!html.includes('Seguridad de contraseñas'));
+   assert(html.includes('name="aviso"'));
+   assert(html.includes('name="precioBN"'));
+   assert(html.includes('name="stockMinimo"'));
   assert(!html.includes('El horario anterior no es válido.'));
   assert(!html.includes('0:600am a 19:00pm'));
     assert(html.includes('id="archiveProductForm"'));
