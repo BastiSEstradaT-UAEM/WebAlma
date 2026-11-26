@@ -597,3 +597,98 @@ body{background:#f5f8f3}
   #view-resumen > .welcome-intro p{font-size:12px;margin-top:5px}
   #view-resumen > .welcome-intro .uaem-identity{margin-top:6px}
 }
+
+/* Vista general equilibrada: sin franja de avisos, con portada visual y paneles útiles.
+   Los datos reales y permisos de Administradora / Auxiliar permanecen intactos. */
+@media (min-width:1061px) and (min-height:570px){
+  #view-resumen:not([hidden]){
+    display:grid;
+    grid-template-rows:minmax(0,.95fr) auto minmax(0,1.05fr);
+    gap:clamp(10px,1.45dvh,15px);
+    align-content:stretch;
+  }
+  #view-resumen > .welcome-intro{
+    position:relative;min-height:0;height:100%;
+    padding:clamp(18px,2.5vw,32px);
+    border:1px solid #d8e9dc;border-radius:17px;
+    background:
+      radial-gradient(circle at 92% 35%,rgba(34,136,93,.13) 0 65px,transparent 66px),
+      radial-gradient(circle at 99% 85%,rgba(224,181,68,.12) 0 90px,transparent 91px),
+      linear-gradient(110deg,#fffefa 0%,#eff8f1 100%);
+    box-shadow:0 7px 25px rgba(15,84,57,.055);
+    overflow:hidden;
+  }
+  #view-resumen > .welcome-intro > div{position:relative;z-index:1;max-width:800px}
+  #view-resumen > .welcome-intro .eyebrow{
+    font-size:clamp(11px,1.1vw,13px);
+    letter-spacing:1.5px;margin-bottom:clamp(5px,.8dvh,10px);
+  }
+  #view-resumen > .welcome-intro h1{
+    font-size:clamp(28px,2.45vw,39px);
+    line-height:1.16;letter-spacing:-.04em;
+  }
+  #view-resumen > .welcome-intro p{
+    font-size:clamp(12px,1.12vw,15px);
+    line-height:1.4;margin-top:clamp(5px,.9dvh,11px);
+  }
+  #view-resumen > .welcome-intro .uaem-identity{
+    font-size:clamp(10px,.85vw,12px);
+    margin-top:clamp(7px,1dvh,13px);padding:5px 11px;
+  }
+  #view-resumen > .metric-grid{
+    gap:clamp(10px,1.1vw,16px);margin:0;
+  }
+  #view-resumen .metric-card{
+    padding:clamp(11px,1.3dvh,16px) clamp(13px,1.2vw,18px);
+    border-radius:14px;
+  }
+  #view-resumen .metric-top{font-size:clamp(10px,.82vw,12px)}
+  #view-resumen .metric-number{font-size:clamp(25px,2.1vw,32px);margin:7px 0 6px}
+  #view-resumen .metric-foot{font-size:11px}
+  #view-resumen > .dashboard-grid{min-height:0;gap:13px;grid-template-columns:1.02fr .98fr}
+  #view-resumen > .dashboard-grid > .panel{
+    min-height:0;padding:15px clamp(15px,1.5vw,22px);
+    border-radius:15px;
+  }
+  #view-resumen .dashboard-grid .panel-head{margin-bottom:11px}
+  #view-resumen .dashboard-grid .panel-head h2{font-size:15px}
+  #view-resumen .dashboard-grid .panel-head p{font-size:11px}
+  #view-resumen #homeOrders{display:flex;flex:1;flex-direction:column;min-height:0}
+  #view-resumen #homeOrders .empty-state{
+    display:flex;flex:1;flex-direction:column;
+    justify-content:center;align-items:center;
+    min-height:125px;margin:2px 0 0;
+    padding:15px 12px;
+    background:linear-gradient(135deg,#f4faf5,#f9fcf8);
+    border:1px dashed #d2e7d8;border-radius:12px;
+  }
+  #view-resumen #homeOrders .empty-icon{
+    width:46px;height:46px;margin-bottom:10px;
+    background:#e2f2e7;color:#08734b;
+  }
+  #view-resumen #homeOrders .empty-state strong{font-size:13px;color:#0e533c}
+  #view-resumen #homeOrders .empty-state p{font-size:11px;margin-top:5px}
+  #view-resumen .stock-preview{
+    display:flex;flex:1;flex-direction:column;
+    justify-content:space-evenly;gap:4px;min-height:0;
+  }
+  #view-resumen .stock-line{
+    display:flex;gap:9px;min-height:30px;
+    padding:7px 10px;margin:0;
+    border:1px solid #edf3ec;border-radius:9px;
+    background:#f8fbf7;
+  }
+  #view-resumen .stock-line:first-child{padding-top:7px}
+  #view-resumen .stock-line:last-child{border-bottom:1px solid #edf3ec}
+  #view-resumen .stock-name{color:#28553d;font-size:11px}
+  #view-resumen .stock-line-right strong{font-size:10px}
+  #view-resumen .stock-line .badge{padding:5px 7px;font-size:9px}
+  #view-resumen .summary-order{padding:9px 0}
+}
+@media (max-height:650px) and (min-width:1061px){
+  #view-resumen > .welcome-intro{padding:13px 21px}
+  #view-resumen > .welcome-intro h1{font-size:28px}
+  #view-resumen > .dashboard-grid > .panel{padding:10px 14px}
+  #view-resumen .stock-line{padding:4px 8px;min-height:24px}
+  #view-resumen #homeOrders .empty-state{min-height:95px}
+}

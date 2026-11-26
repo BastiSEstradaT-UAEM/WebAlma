@@ -72,9 +72,10 @@ for(const role of ['administradora','auxiliar']) {
   assert(!html.includes('> Administrar inventario</button>'));
   assert(html.includes('data-go="pedidos"'));
   assert(html.includes('data-go="inventario"'));
-  assert(html.includes('class="insight-strip"'));
+  assert(!html.includes('class="insight-strip"'));
+  assert(!html.includes('Aviso del establecimiento'));
   assert(html.includes('id="homeOrders"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=8'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=9'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -93,7 +94,7 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('value="unverified"'));
     assert(html.includes('Movimiento</span></button>'));
   assert(html.includes('data-nav="configuracion"'));
-  assert(html.includes('data-go="configuracion"'));
+  assert(!html.includes('data-go="configuracion"')); // El acceso a Configuración permanece en el menú lateral.
   assert(html.includes('id="view-configuracion"'));
   assert(html.includes('class="settings-board"'));
   assert(html.includes('class="section-card pad-card settings-operations"'));
@@ -219,6 +220,8 @@ assert(institutionalCss.includes('grid-template-rows:auto auto minmax(0,1fr) aut
 assert(institutionalCss.includes('overscroll-behavior:contain'));
 assert(institutionalCss.includes('#view-resumen > .welcome-intro h1'));
 assert(institutionalCss.includes('min-height:clamp(123px,17dvh,160px)'));
+assert(institutionalCss.includes('grid-template-rows:minmax(0,.95fr) auto minmax(0,1.05fr)'));
+assert(institutionalCss.includes('#view-resumen #homeOrders .empty-state'));
 assert(institutionalCss.includes('@media (min-width:1061px) and (min-height:570px)'));
 assert(institutionalCss.includes('.content:has(#view-resumen:not([hidden]))'));
 assert(institutionalCss.includes('max-height:100dvh'));
