@@ -251,7 +251,7 @@ app.get('/reportes/historial',auth,admin,async(req,res,next)=>{
   if(!fecha&&!estado)return res.status(400).json({error:'Selecciona una fecha o un estado.'});
   if(estado&&!validStates.includes(estado))return res.status(400).json({error:'Estado inválido.'});
   if(fecha){
-    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(fecha))return res.status(400).json({error:'Fecha inválida.'});
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha))return res.status(400).json({error:'Fecha inválida.'});
     const [y,m,d]=fecha.split('-').map(Number);
     const date=new Date(Date.UTC(y,m-1,d));
     if(Number.isNaN(date.getTime())||date.toISOString().slice(0,10)!==fecha)
