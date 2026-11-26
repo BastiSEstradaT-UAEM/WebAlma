@@ -94,7 +94,7 @@ for(const role of ['administradora','auxiliar']) {
     assert(html.includes('value="unverified"'));
     assert(html.includes('Movimiento</span></button>'));
   assert(html.includes('data-nav="configuracion"'));
-  assert(html.includes('data-go="configuracion"'));
+  assert(!html.includes('data-go="configuracion"')); // El acceso a Configuración permanece en el menú lateral.
   assert(html.includes('id="view-configuracion"'));
   assert(html.includes('class="settings-board"'));
   assert(html.includes('class="section-card pad-card settings-operations"'));
