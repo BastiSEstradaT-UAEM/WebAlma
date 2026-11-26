@@ -70,7 +70,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('class="dashboard-grid"'));
   assert(html.includes('class="insight-strip"'));
   assert(html.includes('id="homeOrders"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=6'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=7'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -209,6 +209,11 @@ assert(institutionalCss.includes('.archive-product-copy p{'));
 assert(institutionalCss.includes('@media(max-width:600px)'));
 
 assert(institutionalCss.includes('.mobile-menu-bar{display:none}'));
+assert(institutionalCss.includes('html:has(#view-resumen:not([hidden]))'));
+assert(institutionalCss.includes('body:has(#view-resumen:not([hidden])) .layout'));
+assert(institutionalCss.includes('grid-template-rows:auto auto minmax(0,1fr) auto'));
+assert(institutionalCss.includes('overscroll-behavior:contain'));
+assert(institutionalCss.includes('@media (min-width:1061px) and (min-height:570px)'));
 assert(institutionalCss.includes('.content:has(#view-resumen:not([hidden]))'));
 assert(institutionalCss.includes('max-height:100dvh'));
 assert(institutionalCss.includes('#view-resumen > .dashboard-grid > .panel'));
