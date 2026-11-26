@@ -65,7 +65,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="openSidebar"'));
   assert(html.includes('id="closeSidebar"'));
   assert(html.includes('class="sidebar"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=4'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=5'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
