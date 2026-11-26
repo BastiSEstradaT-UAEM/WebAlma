@@ -65,7 +65,12 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('id="openSidebar"'));
   assert(html.includes('id="closeSidebar"'));
   assert(html.includes('class="sidebar"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=5'));
+  assert(html.includes('id="view-resumen"'));
+  assert(html.includes('class="metric-grid"'));
+  assert(html.includes('class="dashboard-grid"'));
+  assert(html.includes('class="insight-strip"'));
+  assert(html.includes('id="homeOrders"'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=6'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -204,6 +209,10 @@ assert(institutionalCss.includes('.archive-product-copy p{'));
 assert(institutionalCss.includes('@media(max-width:600px)'));
 
 assert(institutionalCss.includes('.mobile-menu-bar{display:none}'));
+assert(institutionalCss.includes('.content:has(#view-resumen:not([hidden]))'));
+assert(institutionalCss.includes('max-height:100dvh'));
+assert(institutionalCss.includes('#view-resumen > .dashboard-grid > .panel'));
+assert(institutionalCss.includes('@media (min-width:1180px) and (min-height:740px)'));
 assert(institutionalCss.includes('.mobile-menu-bar .hamburger'));
 const pedidoEjemplo={id:'55',cliente:'Estudiante de prueba',total:12,hora:'12:00',articulos:['PDF Tarea.pdf'],documentos:[{id:'9',nombre:'Tarea.pdf'}]};
 const ejemploHTML=ejs.render(fs.readFileSync(path.join(BASE,'views/gestor.ejs'),'utf8'),
