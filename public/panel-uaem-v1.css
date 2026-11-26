@@ -560,3 +560,40 @@ body{background:#f5f8f3}
   #view-resumen > .insight-strip .btn{min-height:31px;padding:6px 9px;font-size:10px}
 }
 /* En teléfonos, ventanas estrechas o muy bajas no se oculta contenido. */
+
+/* Vista general: jerarquía visual de bienvenida prioritaria y tarjetas más bajas.
+   Modifica exclusivamente el diseño; aplica a Administradora y Auxiliar. */
+@media (min-width:1061px) and (min-height:570px){
+  #view-resumen > .welcome-intro{
+    display:flex;align-items:center;justify-content:flex-start;
+    min-height:clamp(123px,17dvh,160px);
+    padding:7px 4px;
+  }
+  #view-resumen > .welcome-intro .eyebrow{
+    font-size:12px;letter-spacing:1.35px;font-weight:800;margin-bottom:8px;
+  }
+  #view-resumen > .welcome-intro h1{
+    font-size:clamp(27px,2.2vw,36px);
+    line-height:1.16;letter-spacing:-.035em;
+  }
+  #view-resumen > .welcome-intro p{
+    font-size:14px;line-height:1.45;margin-top:9px;
+  }
+  #view-resumen > .welcome-intro .uaem-identity{
+    margin-top:10px;padding:5px 11px;font-size:11px;
+  }
+  #view-resumen > .dashboard-grid > .panel{
+    padding:11px 15px;
+  }
+  #view-resumen .dashboard-grid .panel-head{margin-bottom:7px}
+  #view-resumen .dashboard-grid .stock-line{padding:5px 0}
+  #view-resumen .dashboard-grid .summary-order{padding:7px 0}
+}
+@media (min-width:1061px) and (min-height:570px) and (max-height:660px){
+  #view-resumen > .welcome-intro{
+    min-height:112px;padding:2px 4px;
+  }
+  #view-resumen > .welcome-intro h1{font-size:27px}
+  #view-resumen > .welcome-intro p{font-size:12px;margin-top:5px}
+  #view-resumen > .welcome-intro .uaem-identity{margin-top:6px}
+}
