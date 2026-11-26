@@ -86,6 +86,10 @@ for(const role of ['administradora','auxiliar']) {
   assert(html.includes('data-nav="configuracion"'));
   assert(html.includes('data-go="configuracion"'));
   assert(html.includes('id="view-configuracion"'));
+  assert(html.includes('class="settings-board"'));
+  assert(html.includes('class="section-card pad-card settings-operations"'));
+  assert(html.includes('class="section-card pad-card settings-create"'));
+  assert(html.includes('class="section-card pad-card settings-accounts"'));
   assert(html.includes('ADMINISTRACIÓN</div>'));
   assert(html.includes('name="horaApertura"'));
   assert(html.includes('name="horaCierre"'));
