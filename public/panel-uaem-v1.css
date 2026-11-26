@@ -731,3 +731,88 @@ body{background:#f5f8f3}
   #view-resumen > .welcome-intro h1{font-size:28px}
   #view-resumen > .welcome-intro .uaem-identity{margin-top:5px}
 }
+
+/* Resumen: alertas de inventario en filas ordenadas, centradas y consistentes.
+   Estilo aislado: no modifica la tabla de inventario ni sus operaciones. */
+#view-resumen .stock-preview{
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  min-height:0;
+  justify-content:center;
+  align-items:stretch;
+  gap:10px;
+  padding:8px 0;
+}
+#view-resumen .stock-preview .stock-line{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) max-content;
+  align-items:center;
+  gap:12px;
+  flex:0 0 auto;
+  width:100%;
+  min-height:48px;
+  padding:10px 14px;
+  margin:0;
+  background:#f7faf7;
+  border:1px solid #e2ece4;
+  border-radius:11px;
+}
+#view-resumen .stock-preview .stock-line:first-child,
+#view-resumen .stock-preview .stock-line:last-child{
+  padding:10px 14px;
+  border:1px solid #e2ece4;
+}
+#view-resumen .stock-preview .stock-name{
+  display:block;
+  min-width:0;
+  color:#254538;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:500;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+#view-resumen .stock-preview .stock-line-right{
+  display:grid;
+  grid-template-columns:64px 65px;
+  align-items:center;
+  justify-items:end;
+  gap:10px;
+  white-space:nowrap;
+}
+#view-resumen .stock-preview .stock-line-right strong{
+  font-size:12px;
+  font-weight:700;
+  color:#28513f;
+  font-variant-numeric:tabular-nums;
+}
+#view-resumen .stock-preview .stock-line .badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:65px;
+  min-height:27px;
+  padding:5px 8px;
+  border-radius:8px;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.15;
+}
+@media (min-width:1061px) and (min-height:570px) and (max-height:650px){
+  #view-resumen .stock-preview{gap:6px;padding:3px 0}
+  #view-resumen .stock-preview .stock-line{
+    min-height:35px;padding:6px 10px;
+  }
+  #view-resumen .stock-preview .stock-line:first-child,
+  #view-resumen .stock-preview .stock-line:last-child{padding:6px 10px}
+  #view-resumen .stock-preview .stock-line .badge{min-height:23px}
+}
+@media(max-width:780px){
+  #view-resumen .stock-preview{justify-content:flex-start;gap:8px}
+  #view-resumen .stock-preview .stock-line{padding:9px 10px;gap:8px}
+  #view-resumen .stock-preview .stock-line-right{
+    grid-template-columns:54px 58px;gap:5px;
+  }
+  #view-resumen .stock-preview .stock-line .badge{min-width:58px}
+}
