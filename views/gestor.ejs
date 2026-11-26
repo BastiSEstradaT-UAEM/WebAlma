@@ -362,36 +362,7 @@
                       <% if (Number(cuenta.id) === Number(usuario.id)) { %>
                         <input type="hidden" name="rol" value="administradora">
                         <p class="staff-self-note">Tu cuenta conserva el permiso de administradora.</p>
-                      <% } else { %>
-                      <div class="form-field"><label for="staffRole<%= cuenta.id %>">Permisos</label><select id="staffRole<%= cuenta.id %>" name="rol" required><option value="auxiliar" <%= cuenta.rol === 'auxiliar' ? 'selected' : '' %>>Auxiliar</option><option value="administradora" <%= cuenta.rol === 'administradora' ? 'selected' : '' %>>Administradora</option></select></div>
-                      <% } %>
-                      <div class="form-field"><label for="staffPass<%= cuenta.id %>">Nueva contraseña (opcional)</label><input id="staffPass<%= cuenta.id %>" name="password" type="password" minlength="12" maxlength="128" placeholder="Dejar vacío para conservarla" autocomplete="new-password"></div>
-                      <% if (Number(cuenta.id) === Number(usuario.id)) { %>
-                      <div class="form-field"><label for="staffCurrent<%= cuenta.id %>">Contraseña actual (para cambiar tu usuario o contraseña)</label><input id="staffCurrent<%= cuenta.id %>" name="claveActual" type="password" autocomplete="current-password"></div>
-                      <% } %>
-                      <p class="hint">Al guardar, la cuenta modificada deberá iniciar sesión nuevamente.</p>
-                      <button type="submit" class="btn btn-primary">Guardar cambios de acceso</button>
-                    </form>
-                    <% if (Number(cuenta.id) !== Number(usuario.id)) { %>
-                    <form method="post" action="/configuracion/usuarios/<%= cuenta.id %>/desactivar" data-confirm="¿Desactivar el acceso de <%= cuenta.nombre %>? Se cerrarán sus sesiones y ya no podrá ingresar. Se conservarán sus registros históricos." class="staff-disable-form">
-                      <input type="hidden" name="_csrf" value="<%= csrf %>">
-                      <button type="submit" class="btn btn-reject">Desactivar cuenta</button>
-                    </form>
-                    <% } %>
-                  </div>
-                </details>
-                <% } %>
-              </div>
-              <% }) %>
-            </div>
-            <p class="staff-security-note">Por seguridad, eliminar un usuario significa desactivar su acceso, sin borrar sus registros históricos.</p>
-          </article>
-          <% } else { %>
-          <article class="section-card pad-card"><div class="panel-head"><div><h2>Acerca del sistema WebAlma</h2><p>Alcance actual y tareas pendientes</p></div></div><div class="feature-status"><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Inventario conectado al bot de Telegram</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Pedidos instantáneos con Socket.io</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Registro de entradas y salidas PEPS</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Verificar existencias y precios físicos</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Recepción de archivos por Telegram y pagos verificados</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Sincronizar los precios y avisos de configuración con el bot</span></div></div><p class="hint">La auxiliar puede registrar impresiones y entregas; solo la propietaria puede agregar productos, cambiar precios o modificar existencias.</p></article>
-          <% } %></div>
-        </section
-            </article>
-          </div>
+                      </div>
         </section>
         <% } %>
       </main>
