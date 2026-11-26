@@ -364,3 +364,56 @@ body{background:#f5f8f3}
 .section-field-label{margin:0 0 8px;color:#225c41;font-size:12px;font-weight:800}
 #view-configuracion input[type=time]{width:100%;min-height:45px}
 #view-configuracion .schedule-alert{margin-top:7px;padding:8px 11px;background:#fbf9ee;border-left:3px solid #d9b45d;border-radius:5px;font-size:11px;color:#6d6040}
+
+/* Configuración compacta: tres paneles en escritorio y desplazamiento natural en móvil. */
+#view-configuracion .settings-intro{margin-bottom:12px}
+#view-configuracion .settings-board{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+#view-configuracion .settings-board>.section-card{min-width:0;padding:18px 17px}
+#view-configuracion .settings-board .panel-head{margin-bottom:11px;gap:8px}
+#view-configuracion .settings-board .panel-head h2{font-size:15px}
+#view-configuracion .settings-board .panel-head p{font-size:10px;line-height:1.35;margin-top:3px}
+#view-configuracion .settings-board .stack-form{gap:9px}
+#view-configuracion .settings-board .form-field{gap:4px}
+#view-configuracion .settings-board .form-row{gap:8px}
+#view-configuracion .settings-board .form-field label{font-size:11px;line-height:1.3}
+#view-configuracion .settings-board .form-field input,
+#view-configuracion .settings-board .form-field select,
+#view-configuracion .settings-board .form-field textarea{min-height:35px;padding:7px 10px;font-size:12px;border-radius:9px}
+#view-configuracion .settings-board input[type=time]{min-height:35px}
+#view-configuracion .settings-board textarea{resize:vertical;min-height:54px;max-height:105px}
+#view-configuracion .settings-board .section-field-label{font-size:11px;margin:0 0 6px}
+#view-configuracion .settings-board .checkbox-line{font-size:10px;line-height:1.35;gap:6px}
+#view-configuracion .settings-board .btn-primary{min-height:36px;padding:8px 10px}
+#view-configuracion .settings-help{border:1px solid #e0ece2;border-radius:8px;background:#f8fbf7;font-size:10px;color:#386f50;line-height:1.4}
+#view-configuracion .settings-help summary{cursor:pointer;list-style:none;padding:6px 9px;font-weight:750}
+#view-configuracion .settings-help summary::-webkit-details-marker{display:none}
+#view-configuracion .settings-help summary::after{content:" +";float:right}
+#view-configuracion .settings-help[open] summary::after{content:" −"}
+#view-configuracion .settings-help .hint{margin:0;padding:1px 9px 9px;font-size:10px;line-height:1.5}
+#view-configuracion .settings-accounts{display:flex;flex-direction:column}
+#view-configuracion .settings-accounts .staff-users{max-height:none;overflow:visible;gap:7px}
+#view-configuracion .settings-accounts .staff-account-main{padding:9px 10px;gap:8px}
+#view-configuracion .settings-accounts .staff-account-avatar{width:30px;height:30px;flex-basis:30px}
+#view-configuracion .settings-accounts .staff-account-status{font-size:9px;padding:5px 6px}
+#view-configuracion .settings-accounts .staff-edit>summary{padding:8px 11px}
+#view-configuracion .settings-accounts .staff-security-note{margin-top:10px;font-size:10px;line-height:1.4}
+@media (min-width:1180px) and (min-height:760px){
+  .content:has(#view-configuracion:not([hidden])){height:100dvh;max-height:100dvh;overflow:hidden;padding:15px 20px}
+  #view-configuracion:not([hidden]){display:flex;flex-direction:column;height:100%;min-height:0}
+  #view-configuracion .settings-intro{flex:0 0 auto;margin-bottom:9px}
+  #view-configuracion .settings-intro .eyebrow{margin-bottom:3px}
+  #view-configuracion .settings-intro h1{font-size:22px;line-height:1.2}
+  #view-configuracion .settings-intro p{font-size:11px;margin-top:3px}
+  #view-configuracion .settings-board{flex:1;min-height:0;align-items:stretch}
+  #view-configuracion .settings-board>.section-card{min-height:0;overflow:auto;scrollbar-width:thin}
+  #view-configuracion .settings-accounts .staff-users{min-height:0;overflow-y:auto;scrollbar-width:thin}
+}
+@media(max-width:1179px){
+ #view-configuracion .settings-board{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #view-configuracion .settings-operations{grid-row:span 2}
+}
+@media(max-width:780px){
+ #view-configuracion .settings-board{grid-template-columns:1fr}
+ #view-configuracion .settings-operations{grid-row:auto}
+ #view-configuracion .settings-board>.section-card{padding:17px}
+}

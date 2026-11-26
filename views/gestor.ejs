@@ -7,7 +7,7 @@
   <title>Papelería Universitaria · CU UAEM Valle de Chalco | WebAlma</title>
   <link rel="icon" type="image/svg+xml" sizes="any" href="/public/escudo-uaem-nitido.svg?v=2">
   <link rel="stylesheet" href="/public/panel.css">
-  <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=4">
+  <link rel="stylesheet" href="/public/panel-uaem-v1.css?v=5">
   <link rel="stylesheet" href="/public/reportes-uaem-v1.css?v=2">
   <script src="/socket.io/socket.io.js" defer></script>
   <script src="/public/panel.js?v=5" defer></script>
@@ -320,16 +320,15 @@
         <% } %>
         <% if (usuario.rol === 'administradora') { %>
         <section class="view" id="view-configuracion" data-view="configuracion" hidden>
-          <div class="page-intro"><div><div class="eyebrow">CONFIGURACIÓN DE LA PAPELERÍA</div><h1>Configuración</h1><p>Datos operativos y valores que deben validarse con la papelería.</p></div></div>
-          <div class="two-column settings-layout"><article class="section-card pad-card"><div class="panel-head"><div><h2>Datos de la papelería</h2><p>Telegram muestra el menú solo durante el horario guardado. Las tarifas y los avisos vigentes se consultan desde PostgreSQL.</p></div></div>
-          <% if (usuario.rol === 'administradora') { %>
-          <form method="post" action="/configuracion/guardar" class="stack-form"><input type="hidden" name="_csrf" value="<%= csrf %>"><div class="form-field"><p class="section-field-label">Horario de atención en Telegram (hora de México)</p><div class="form-row"><div class="form-field"><label for="horaApertura">Apertura</label><input type="time" id="horaApertura" name="horaApertura" step="60" required value="<%= horarioConfigurado ? horarioConfigurado.apertura : '' %>"></div><div class="form-field"><label for="horaCierre">Cierre</label><input type="time" id="horaCierre" name="horaCierre" step="60" required value="<%= horarioConfigurado ? horarioConfigurado.cierre : '' %>"></div></div><p class="hint">Se aplica todos los días, según la hora de la Ciudad de México. Fuera de este horario, Telegram mostrará solo un aviso de cierre, sin menú ni registro de nuevos pedidos.</p><% if (!horarioConfigurado) { %><p class="hint schedule-alert">El horario anterior no es válido. Selecciona las horas de apertura y cierre y guarda los cambios para activar el control automático en Telegram.</p><% } %></div><div class="form-field"><label for="announcement">Aviso especial de apertura o cierre</label><textarea name="aviso" id="announcement" rows="3" maxlength="350" placeholder="Ej.: El lunes abriremos a las 8:30 a. m."><%= config.aviso %></textarea><p class="hint">Al cambiar este texto, el aviso se mostrará en Telegram durante 24 horas. Al cambiar el horario, también se mostrará un aviso automático durante 24 horas. Guardar otros ajustes no reactiva avisos anteriores.</p></div><div class="form-row"><div class="form-field"><label for="priceBlack">Precio B/N</label><input type="number" min="0" step="0.01" id="priceBlack" name="precioBN" value="<%= config.precioBN %>" required></div><div class="form-field"><label for="priceColor">Precio color</label><input type="number" min="0" step="0.01" id="priceColor" name="precioColor" value="<%= config.precioColor %>" required></div></div><div class="form-field"><label for="lowThreshold">Mínimo general de existencias</label><input type="number" min="0" step="1" id="lowThreshold" name="stockMinimo" value="<%= config.stockMinimo %>" required></div><label class="checkbox-line"><input type="checkbox" name="preciosValidados" value="si" <%= config.preciosValidados ? 'checked' : '' %>> Estos precios fueron confirmados por la propietaria</label><button class="btn btn-primary full" type="submit">Guardar configuración</button></form>
-          <% } else { %><p class="hint">Solo la propietaria puede modificar los precios y la configuración del negocio.</p><dl class="readonly-values"><dt>Horario</dt><dd><%= horarioConfigurado ? config.horario : 'Pendiente de configurar' %></dd><dt>Aviso</dt><dd><%= config.avisoHasta && new Date(config.avisoHasta).getTime() > Date.now() && config.aviso ? config.aviso : 'Ninguno vigente' %></dd></dl><% } %></article>
-          <% if (usuario.rol === 'administradora') { %>
-          <article class="section-card pad-card staff-management">
-            <div class="panel-head"><div><h2>Usuarios y contraseñas</h2><p>Gestiona las cuentas del personal de la papelería. Las contraseñas nunca se muestran.</p></div><span class="round-icon" aria-hidden="true">🔐</span></div>
-            <div class="staff-new"><div class="staff-section-title">Crear nueva cuenta</div>
-              <form action="/configuracion/usuarios/crear" method="post" class="stack-form staff-create-form" autocomplete="off">
+          <div class="page-intro settings-intro"><div><div class="eyebrow">CONFIGURACIÓN DE LA PAPELERÍA</div><h1>Configuración</h1><p>Horarios, tarifas y personal desde una misma pantalla.</p></div></div>
+          <div class="settings-board">
+            <article class="section-card pad-card settings-operations">
+              <div class="panel-head"><div><h2>Datos de la papelería</h2><p>Horarios y tarifas compartidos con Telegram y PostgreSQL.</p></div></div>
+              <form method="post" action="/configuracion/guardar" class="stack-form settings-operational-form"><input type="hidden" name="_csrf" value="<%= csrf %>"><div class="form-field"><p class="section-field-label">Horario de atención en Telegram (hora de México)</p><div class="form-row"><div class="form-field"><label for="horaApertura">Apertura</label><input type="time" id="horaApertura" name="horaApertura" step="60" required value="<%= horarioConfigurado ? horarioConfigurado.apertura : '' %>"></div><div class="form-field"><label for="horaCierre">Cierre</label><input type="time" id="horaCierre" name="horaCierre" step="60" required value="<%= horarioConfigurado ? horarioConfigurado.cierre : '' %>"></div></div><details class="settings-help"><summary>¿Cómo opera el horario?</summary><p class="hint">Se aplica todos los días, según la hora de la Ciudad de México. Fuera de este horario, Telegram mostrará solo un aviso de cierre, sin menú ni registro de nuevos pedidos.</p></details><% if (!horarioConfigurado) { %><p class="hint schedule-alert">El horario anterior no es válido. Selecciona las horas de apertura y cierre y guarda los cambios para activar el control automático en Telegram.</p><% } %></div><div class="form-field"><label for="announcement">Aviso especial de apertura o cierre</label><textarea name="aviso" id="announcement" rows="2" maxlength="350" placeholder="Ej.: El lunes abriremos a las 8:30 a. m."><%= config.aviso %></textarea><details class="settings-help"><summary>¿Cuándo se muestran los avisos?</summary><p class="hint">Al cambiar este texto, el aviso se mostrará en Telegram durante 24 horas. Al cambiar el horario, también se mostrará un aviso automático durante 24 horas. Guardar otros ajustes no reactiva avisos anteriores.</p></details></div><div class="form-row"><div class="form-field"><label for="priceBlack">Precio B/N</label><input type="number" min="0" step="0.01" id="priceBlack" name="precioBN" value="<%= config.precioBN %>" required></div><div class="form-field"><label for="priceColor">Precio color</label><input type="number" min="0" step="0.01" id="priceColor" name="precioColor" value="<%= config.precioColor %>" required></div></div><div class="form-field"><label for="lowThreshold">Mínimo general de existencias</label><input type="number" min="0" step="1" id="lowThreshold" name="stockMinimo" value="<%= config.stockMinimo %>" required></div><label class="checkbox-line"><input type="checkbox" name="preciosValidados" value="si" <%= config.preciosValidados ? 'checked' : '' %>> Estos precios fueron confirmados por la propietaria</label><button class="btn btn-primary full" type="submit">Guardar configuración</button></form>
+            </article>
+            <article class="section-card pad-card settings-create">
+              <div class="panel-head"><div><h2>Usuarios y contraseñas</h2><p>Crea cuentas del personal y asigna permisos.</p></div><span class="round-icon" aria-hidden="true">🔐</span></div>
+              <form action="/configuracion/usuarios/crear" method="post" class="stack-form staff-create-form settings-staff-form" autocomplete="off">
                 <input type="hidden" name="_csrf" value="<%= csrf %>">
                 <div class="form-row">
                   <div class="form-field"><label for="newStaffName">Nombre del personal</label><input id="newStaffName" name="nombre" maxlength="100" minlength="2" required placeholder="Ej.: Personal de mostrador" autocomplete="off"></div>
@@ -339,12 +338,13 @@
                   <div class="form-field"><label for="newStaffRole">Permisos</label><select id="newStaffRole" name="rol" required><option value="auxiliar" selected>Auxiliar</option><option value="administradora">Administradora</option></select></div>
                   <div class="form-field"><label for="newStaffPass">Contraseña inicial</label><input id="newStaffPass" name="password" type="password" minlength="12" maxlength="128" required placeholder="Al menos 12 caracteres" autocomplete="new-password"></div>
                 </div>
-                <p class="hint">Las cuentas nuevas inician con su contraseña temporal. Compártela por un canal privado y pide que la cambien.</p>
+                <details class="settings-help"><summary>Seguridad de contraseñas</summary><p class="hint">Las cuentas nuevas inician con su contraseña temporal. Compártela por un canal privado y pide que la cambien.</p></details>
                 <button type="submit" class="btn btn-primary full">+ Crear cuenta del personal</button>
               </form>
-            </div>
-            <div class="staff-section-title staff-existing-title">Cuentas registradas</div>
-            <div class="staff-users">
+            </article>
+            <article class="section-card pad-card settings-accounts">
+              <div class="panel-head"><div><h2>Cuentas registradas</h2><p>Consulta o modifica los accesos existentes.</p></div></div>
+              <div class="staff-users">
               <% usuariosPersonal.forEach(cuenta => { %>
               <div class="staff-account <%= cuenta.activo ? '' : 'is-inactive' %>">
                 <div class="staff-account-main">
@@ -386,9 +386,7 @@
             </div>
             <p class="staff-security-note">Por seguridad, eliminar un usuario significa desactivar su acceso, sin borrar sus registros históricos.</p>
           </article>
-          <% } else { %>
-          <article class="section-card pad-card"><div class="panel-head"><div><h2>Acerca del sistema WebAlma</h2><p>Alcance actual y tareas pendientes</p></div></div><div class="feature-status"><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Inventario conectado al bot de Telegram</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Pedidos instantáneos con Socket.io</span></div><div><span class="status-icon ok"><svg class="ico"><use href="#i-check"/></svg></span><span>Registro de entradas y salidas PEPS</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Verificar existencias y precios físicos</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Recepción de archivos por Telegram y pagos verificados</span></div><div><span class="status-icon progress"><svg class="ico"><use href="#i-clock"/></svg></span><span>Sincronizar los precios y avisos de configuración con el bot</span></div></div><p class="hint">La auxiliar puede registrar impresiones y entregas; solo la propietaria puede agregar productos, cambiar precios o modificar existencias.</p></article>
-          <% } %></div>
+          </div>
         </section>
         <% } %>
       </main>
