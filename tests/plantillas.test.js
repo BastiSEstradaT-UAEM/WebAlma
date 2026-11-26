@@ -75,7 +75,7 @@ for(const role of ['administradora','auxiliar']) {
   assert(!html.includes('class="insight-strip"'));
   assert(!html.includes('Aviso del establecimiento'));
   assert(html.includes('id="homeOrders"'));
-  assert(html.includes('/public/panel-uaem-v1.css?v=10'));
+  assert(html.includes('/public/panel-uaem-v1.css?v=11'));
   assert(html.includes('PAPELERÍA UNIVERSITARIA'));
   assert(!html.includes('Papelería UAEM · Valle de Chalco'));
   assert(html.includes('Papelería universitaria'));
@@ -227,6 +227,11 @@ assert(institutionalCss.includes('#view-resumen > .welcome-intro h1'));
 assert(institutionalCss.includes('min-height:clamp(123px,17dvh,160px)'));
 assert(institutionalCss.includes('grid-template-rows:minmax(0,.95fr) auto minmax(0,1.05fr)'));
 assert(institutionalCss.includes('background-image:none'));
+assert(institutionalCss.includes('#view-resumen .stock-preview .stock-line-right'));
+assert(institutionalCss.includes('grid-template-columns:64px 65px'));
+assert(institutionalCss.includes('justify-content:center'));
+assert(institutionalCss.includes('overflow-wrap:anywhere'));
+
 assert(institutionalCss.includes('grid-template-rows:auto auto minmax(0,1fr)'));
 assert(institutionalCss.includes('#view-resumen > .welcome-intro{'));
 
