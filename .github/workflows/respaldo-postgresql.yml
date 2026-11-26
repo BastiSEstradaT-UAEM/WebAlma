@@ -1,0 +1,76 @@
+name: Respaldo cifrado de PostgreSQL - WebAlma
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Una vez al dia: 07:17 UTC (01:17 America/Mexico_City).
+    - cron: '17 7 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: webalma-postgresql-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.WEBALMA_BACKUP_DATABASE_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.WEBALMA_BACKUP_PASSPHRASE }}
+      PGSSLMODE: require
+
+    steps:
+      - name: Comprobar configuracion privada
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${DATABASE_URL:-}" || -z "${BACKUP_PASSPHRASE:-}" ]]; then
+            echo "::error::Configura WEBALMA_BACKUP_DATABASE_URL y WEBALMA_BACKUP_PASSPHRASE en GitHub Actions Secrets."
+            exit 1
+          fi
+          if [[ ${#BACKUP_PASSPHRASE} -lt 24 ]]; then
+            echo "::error::La clave de cifrado debe tener por lo menos 24 caracteres."
+            exit 1
+          fi
+
+      - name: Exportar PostgreSQL 18 y verificar estructura
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          docker run --rm \
+            -e DATABASE_URL -e PGSSLMODE \
+            -v "$RUNNER_TEMP:/backup" \
+            postgres:18 \
+            bash -euc 'pg_dump --dbname="$DATABASE_URL" --format=custom --no-owner --no-privileges --file=/backup/webalma.dump && pg_restore --list /backup/webalma.dump >/dev/null && test -s /backup/webalma.dump'
+
+      - name: Cifrar y comprobar que se puede descifrar
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          fecha="$(date -u +'%Y-%m-%dT%H-%M-%SZ')"
+          archivo="$RUNNER_TEMP/webalma-${fecha}.dump.gpg"
+          printf '%s\n' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 --s2k-digest-algo SHA512 --output "$archivo" "$RUNNER_TEMP/webalma.dump"
+          printf '%s\n' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --decrypt --output "$RUNNER_TEMP/verify.dump" "$archivo"
+          cmp "$RUNNER_TEMP/webalma.dump" "$RUNNER_TEMP/verify.dump"
+          rm -f "$RUNNER_TEMP/webalma.dump" "$RUNNER_TEMP/verify.dump"
+          echo "ENCRYPTED_ARCHIVE=$archivo" >> "$GITHUB_ENV"
+
+      - name: Guardar solamente el respaldo cifrado
+        uses: actions/upload-artifact@v4
+        with:
+          name: webalma-postgresql-cifrado-${{ github.run_id }}
+          path: ${{ env.ENCRYPTED_ARCHIVE }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Limpiar archivo temporal
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$RUNNER_TEMP/webalma.dump" "$RUNNER_TEMP/verify.dump" "$RUNNER_TEMP"/webalma-*.dump.gpg
